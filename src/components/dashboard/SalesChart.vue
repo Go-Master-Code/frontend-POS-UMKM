@@ -10,6 +10,12 @@
 */
 import { computed } from "vue";
 
+// memastikan ada data untuk di mapping pada SalesChart
+const hasData = computed(() => {
+    return props.labels.length > 0 &&
+           props.values.length > 0;
+});
+
 import Chart from "primevue/chart";
 import Card from "primevue/card";
 import Skeleton from "primevue/skeleton"
@@ -111,7 +117,7 @@ const chartOptions = {
 <template>
     <Card class="chart-card">
         <template #title>
-            Sales Last 7 Days
+            Last 7 Days Sales
         </template>
         <template #content>
             <!-- ======================================
@@ -147,12 +153,19 @@ const chartOptions = {
             </div>
             <!--Chart-->
             <Chart
-                v-else
+                v-else-if="hasData"
                 type="line"
                 :data="chartData"
                 :options="chartOptions"
                 class="chart"
             />
+            <!-- Empty -->
+            <div
+                v-else
+                class="empty-chart"
+            >
+                No sales data
+            </div>
         </template>
     </Card>
 </template>
@@ -181,5 +194,13 @@ const chartOptions = {
 .axis-labels{
     display:flex;
     justify-content:space-between;
+}
+
+.empty-chart{
+    height:320px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#9CA3AF;
 }
 </style>

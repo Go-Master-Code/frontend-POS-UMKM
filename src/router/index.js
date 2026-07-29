@@ -9,6 +9,7 @@ import MainLayout from '@/layouts/MainLayout.vue'
 
 // import untuk module bisnis
 import UserListView from '@/views/users/UserListView.vue'
+import BusinessProfileView from '@/views/settings/BusinessProfileView.vue'
 
 // membuat instance vue router
 const router = createRouter({
@@ -49,6 +50,13 @@ const router = createRouter({
                     component: UserListView,
                     meta: {
                         title: "Users",
+                    },
+                },
+                { // ✅ Business Profile berada di dalam MainLayout
+                    path: "settings/business-profile", // berkaitan dengan file config/menu.js, path harus persis sama
+                    component: BusinessProfileView,
+                    meta: {
+                        title: "Business Profile",
                     },
                 },
             ]

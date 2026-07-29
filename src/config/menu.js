@@ -84,9 +84,8 @@ export const menuItems = [
         ],
     },
     {
-        key: "settings",
-        label: "Settings",
-        icon: "pi pi-cog",
-        route: "/settings",
+        label: "Business Profile",
+        icon: "pi pi-building",
+        route: "/settings/business-profile",
     },
 ];

@@ -153,7 +153,7 @@
         try {
             const response = await getDashboardSummary();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // await new Promise(resolve => setTimeout(resolve, 2000));
 
             const data = response.data.data;
 
@@ -185,9 +185,12 @@
         try {
             const response = await getDailySalesChart();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // await new Promise(resolve => setTimeout(resolve, 2000));
 
-            const rows = response.data.data;
+            // Pastikan rows selalu berupa array
+            const rows = Array.isArray(response.data.data)
+                ? response.data.data
+                : []; // jika null, definisikan sebagai empty array
 
             /*Label X Axis*/
             salesLabels.value = rows.map(item => formatShortDate(item.date));
@@ -214,8 +217,13 @@
         try {
             const response = await getDailyPurchaseChart();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const rows = response.data.data;
+            // await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // const rows = response.data.data;
+            // Pastikan rows selalu berupa array
+            const rows = Array.isArray(response.data.data)
+                ? response.data.data
+                : []; // jika null, definisikan sebagai empty array
 
             /*Label X Axis*/
             purchaseLabels.value = rows.map(item => formatShortDate(item.date));
@@ -242,7 +250,8 @@
         try {
             const response = await getTopSellingProducts();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            //await new Promise(resolve => setTimeout(resolve, 2000));
+            
             topSellingProducts.value = response.data.data;
         } catch(err) {
             console.error("Failed to load top selling products", err);
@@ -264,7 +273,8 @@
         try {
             const response = await getLowStockItems();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            //await new Promise(resolve => setTimeout(resolve, 2000));
+            
             lowStockItems.value = response.data.data;
         } catch(err) {
             console.error("Failed to load low stock items", err);
@@ -286,7 +296,8 @@
         try {
             const response = await getRecentSales();
             // DEVELOPMENT ONLY
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            //await new Promise(resolve => setTimeout(resolve, 2000));
+            
             recentSales.value = response.data.data;
         } catch(err) {
             console.error("Failed to load recent sales", err);

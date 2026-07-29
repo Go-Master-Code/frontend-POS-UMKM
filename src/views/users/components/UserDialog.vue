@@ -103,6 +103,15 @@ function clearErrors() {
 
 /*
 |--------------------------------------------------------------------------
+| Clear Error dari field
+|--------------------------------------------------------------------------
+*/
+function clearError(field) {
+    errors[field] = "";
+}
+
+/*
+|--------------------------------------------------------------------------
 | Validasi form
 |--------------------------------------------------------------------------
 */
@@ -141,11 +150,10 @@ function validateForm() {
 |--------------------------------------------------------------------------
 */
 function submitForm() {
-    console.log("submit clicked");
+    // console.log("submit clicked");
     if (!validateForm()) {
         return;
     }
-
     emit("save");
 }
 
@@ -183,6 +191,7 @@ function onlyPhoneChars(event) {
                     v-model="form.full_name"
                     fluid
                     :invalid="!!errors.full_name"
+                    @input="clearError('full_name')"
                 />
                 <small class="p-error">
                     {{ errors.full_name }}
@@ -196,6 +205,7 @@ function onlyPhoneChars(event) {
                     fluid
                     :disabled="mode === 'edit'"
                     :invalid="!!errors.username"
+                    @input="clearError('username')"
                 />
                 <small class="p-error">
                     {{ errors.username  }}
@@ -210,6 +220,7 @@ function onlyPhoneChars(event) {
                     toggleMask
                     fluid
                     :invalid="!!errors.password"
+                    @input="clearError('password')"
                 />
                 <small class="p-error">
                     {{ errors.password }}
@@ -223,6 +234,7 @@ function onlyPhoneChars(event) {
                     fluid
                     :invalid="!!errors.phone"
                     @keypress="onlyPhoneChars"
+                    @input="clearError('phone')"
                 />
                 <small class="p-error">
                     {{ errors.phone }}
@@ -239,6 +251,7 @@ function onlyPhoneChars(event) {
                     placeholder="Select Role"
                     fluid
                     :invalid="!!errors.role_id"
+                    @update:modelValue="clearError('role_id')"
                 />
                 <small class="p-error">
                     {{ errors.role_id }}
