@@ -20,7 +20,7 @@ export const menuItems = [
                 key: "items",
                 label: "Items",
                 icon: "pi pi-box",
-                route: "/items",
+                route: "/catalog_item",
             },
             {
                 key: "variants",

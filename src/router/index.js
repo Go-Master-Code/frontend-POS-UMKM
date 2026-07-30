@@ -11,6 +11,7 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import UserListView from '@/views/users/UserListView.vue'
 import BusinessProfileView from '@/views/settings/BusinessProfileView.vue'
 import CatalogCategoryListView from '@/views/catalog_category/CatalogCategoryListView.vue'
+import CatalogItemListView from '@/views/catalog_item/CatalogItemListView.vue'
 
 // membuat instance vue router
 const router = createRouter({
@@ -65,6 +66,13 @@ const router = createRouter({
                     component: CatalogCategoryListView,
                     meta: {
                         title: "Catalog Category",
+                    },
+                },
+                {
+                    path: "catalog_item", // berkaitan dengan file config/menu.js, path harus persis sama
+                    component: CatalogItemListView,
+                    meta: {
+                        title: "Catalog Item",
                     },
                 },
             ]

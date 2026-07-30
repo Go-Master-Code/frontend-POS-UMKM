@@ -4,10 +4,11 @@
     import Button from "primevue/button";
     import InputText from "primevue/inputtext";
 
-    import CatalogCategoryTable from "./components/CatalogCategoryTable.vue";
-    import CatalogCategoryDialog from "./components/CatalogCategoryDialog.vue"
+    import CatalogItemTable from "./components/CatalogItemTable.vue";
+    import CatalogItemDialog from "./components/CatalogItemDialog.vue"
 
-    import { getCatalogCategory,getCatalogCategoryByID,createCatalogCategory,updateCatalogCategory,deleteCatalogCategory } from "@/api/catalog_categories";
+    import { getCatalogItems,getCatalogItemByID,createCatalogItem,updateCatalogItem,deleteCatalogItem } from "@/api/catalog_items";
+    import { getCatalogCategory } from "@/api/catalog_categories.js"
 
     import { watch } from "vue";
     import { useDebounceFn } from "@vueuse/core";
@@ -22,8 +23,8 @@
     |--------------------------------------------------------------------------
     */
 
-    // Data catalog category
-    const catalog_category = ref([]);
+    // Data catalog item
+    const catalog_item = ref([]);
 
     // Loading tabel
     const loading = ref(false);
@@ -40,11 +41,13 @@
     const backendError = ref("");
 
     // sort column
+    // const sortField = ref("created_at"); bisa langsung sort kolom saat halaman berisi tabel dibuka
     const sortField = ref(null);
+
     const sortOrder = ref(-1); // PrimeVue format (1 atau -1)
 
     // id catalog category yang sedang diedit
-    const editingCatalogCategoryId = ref(null);
+    const editingCatalogItemId = ref(null);
 
     // untuk confirm delete
     const confirm = useConfirm();
@@ -66,19 +69,30 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Form Catalog Category
+    | Form Catalog Item
     |--------------------------------------------------------------------------
     */
-    const catalogCategoryForm = ref(createEmptyCatalogCategory());
+    const catalogItemForm = ref(createEmptyCatalogItem());
 
-    function createEmptyCatalogCategory() {
+    function createEmptyCatalogItem() { // default value nya
         return {
             name: "",
+            category_id: "",
+            category_name: "",
+            description: "",
+            is_active: true,
         };
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Role Options
+    |--------------------------------------------------------------------------
+    */
+    const catalog_category = ref([]); // sementara diisi kosong dulu
+
     /**
-     * Membuka dialog Add Catalog Category.
+     * Membuka dialog Add Catalog Item.
      */
     async function openCreateDialog() {
         dialogMode.value = "create";
@@ -91,8 +105,8 @@
      * Reset form menjadi kosong.
      */
     function resetForm() {
-        catalogCategoryForm.value = createEmptyCatalogCategory();
-        editingCatalogCategoryId.value = null;
+        catalogItemForm.value = createEmptyCatalogItem();
+        editingCatalogItemId.value = null;
         dialogMode.value = "create";
     }
 
@@ -101,7 +115,7 @@
      */
     const debouncedSearch = useDebounceFn(() => {
         page.value = 1;
-        loadCatalogCategory();
+        loadCatalogItem();
     }, 400);
 
     // watcher saat searbox diketik
@@ -118,12 +132,12 @@
     /**
      * Mengambil daftar catalog category dari backend.
      */
-    async function loadCatalogCategory() {
+    async function loadCatalogItem() {
         if (loading.value) return;
         loading.value = true;
 
         try {
-            const response = await getCatalogCategory({
+            const response = await getCatalogItems({
                 page: page.value,
                 limit: rows.value,
                 search: keyword.value,
@@ -135,7 +149,7 @@
             console.log(response.data);
 
             // sesuaikan jika format response backend berbeda
-            catalog_category.value = response.data.data ?? [];
+            catalog_item.value = response.data.data ?? [];
             totalRecords.value = response.data.meta.total; // ambil meta dari response backend
         } catch (err) {
             console.error(err);
@@ -153,30 +167,43 @@
      * Save Catalog Category.
      * (sementara hanya console)
      */
-    async function saveCatalogCategory() {
+    async function saveCatalogItem() {
         saving.value = true;
         try {
-            console.log(catalogCategoryForm.value);
+            console.log(catalogItemForm.value);
             // cek dulu mode dialog create / edit
             if (dialogMode.value === "create") {
-                await createCatalogCategory(catalogCategoryForm.value);
+                await createCatalogItem(catalogItemForm.value);
             } else { // jika mode nya update
-                await updateCatalogCategory(
-                    editingCatalogCategoryId.value,
-                    catalogCategoryForm.value
+                await updateCatalogItem(
+                    editingCatalogItemId.value,
+                    catalogItemForm.value
                 );
             }
 
             backendError.value = ""; // kosongkan error backend
             dialogVisible.value = false;
             resetForm();
-            await loadCatalogCategory();
+            await loadCatalogItem();
         } catch (err) {
             console.log("Error :", err.response?.data);
             backendError.value = err.response?.data?.error ?? "Failed to save data.";
             console.log("Backend error: ", backendError.value)
         } finally {
             saving.value = false;
+        }
+    }
+
+    /**
+     * Mengambil daftar catalog category untuk komponen select.
+     */
+    async function loadCatalogCategory() {
+        try {
+            const response = await getCatalogCategory();
+            console.log("Catalog Categories:", response.data);
+            catalog_category.value = response.data.data ?? [];
+        } catch (err) {
+            console.error(err);
         }
     }
 
@@ -191,7 +218,7 @@
         rows.value = event.rows;
 
         // reload data dari server
-        loadCatalogCategory();
+        loadCatalogItem();
     }
 
     // function untuk sort data per kolom
@@ -201,7 +228,7 @@
 
         page.value = 1; // reset ke page 1 saat sort
 
-        loadCatalogCategory(); // load ulang data
+        loadCatalogItem(); // load ulang data
     }
 
     /**
@@ -226,21 +253,22 @@
     */
 
     onMounted(() => {
-        loadCatalogCategory(); // load catalog category pada saat halaman dimuat
+        loadCatalogItem(); // load catalog item pada saat halaman dimuat
+        loadCatalogCategory(); // load catalog category sekali pada saat halaman dimuat
     });
 
     // 2 function sementara untuk edit dan delete
-    async function handleEdit(catalog_category) {
+    async function handleEdit(catalog_item) {
         dialogMode.value = "edit";
-        editingCatalogCategoryId.value = catalog_category.id;
+        editingCatalogItemId.value = catalog_item.id;
         backendError.value = "";
 
         try {
             loading.value = true;
             // ambil data terbaru dari backend
-            const response = await getCatalogCategoryByID(catalog_category.id);
+            const response = await getCatalogItemByID(catalog_item.id);
             // isi form
-            Object.assign(catalogCategoryForm.value, response.data.data);
+            Object.assign(catalogItemForm.value, response.data.data);
             dialogVisible.value = true
         } catch (err) {
             console.log("Error :", err.response?.data);
@@ -252,10 +280,10 @@
     }
 
     // confirm dialog
-    function handleDelete(catalog_category) {
+    function handleDelete(catalog_item) {
         confirm.require({
-            header: "Delete Catalog Category",
-            message: `Delete "${catalog_category.name}"?`,
+            header: "Delete Catalog Item",
+            message: `Delete "${catalog_item.name}"?`,
             icon: "pi pi-exclamation-triangle",
             rejectLabel: "Cancel",
             acceptLabel: "Delete",
@@ -268,23 +296,23 @@
             },
             accept: async () => {
                 try {
-                    await deleteCatalogCategory(catalog_category.id);
+                    await deleteCatalogItem(catalog_item.id);
 
                     toast.add({
                         severity: "success",
                         summary: "Deleted",
-                        detail: "Catalog category deleted successfully.",
+                        detail: "Catalog item deleted successfully.",
                         life: 3000
                     });
 
-                    await loadCatalogCategory();
+                    await loadCatalogItem();
                 } catch (err) {
                     toast.add({
                         severity: "error",
                         summary: "Failed",
                         detail:
                             err.response?.data?.error ??
-                            "Failed to delete catalog category.",
+                            "Failed to delete catalog item.",
                         life: 4000
                     });
                 }
@@ -298,13 +326,13 @@
         <!-- Header -->
         <div class="page-header">
             <div>
-                <h2>Catalog Categories</h2>
-                <small>Manage All Catalog Categories On My Tenant</small>
+                <h2>Catalog Items</h2>
+                <small>Manage All Catalog Items On My Tenant</small>
                 
             </div>
 
             <Button
-                label="Add Catalog Category"
+                label="Add Catalog Item"
                 icon="pi pi-plus"
                 @click="openCreateDialog"
             />
@@ -316,7 +344,7 @@
                 <i class="pi pi-search search-icon" />
                 <InputText
                     v-model="keyword"
-                    placeholder="Search catalog category..."
+                    placeholder="Search catalog item..."
                     class="search-input"
                 />
                 <Button
@@ -332,8 +360,8 @@
         </div>
 
         <!-- Datatable -->
-        <CatalogCategoryTable
-            :catalog_category="catalog_category"
+        <CatalogItemTable
+            :catalog_item="catalog_item"
             :loading="loading"
 
             :sortField="sortField"
@@ -350,13 +378,14 @@
         />
     </div>
 
-    <CatalogCategoryDialog
+    <CatalogItemDialog
         v-model:visible="dialogVisible"
         :mode="dialogMode"
-        :form="catalogCategoryForm"
+        :form="catalogItemForm"
+        :catalog_category="catalog_category"
         :loading="saving"
         :backendError="backendError"
-        @save="saveCatalogCategory"
+        @save="saveCatalogItem"
         @clear-error="clearBackendError"
     />
 </template>
