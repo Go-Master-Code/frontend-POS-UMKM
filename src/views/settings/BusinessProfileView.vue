@@ -11,6 +11,9 @@
 
     import { useToast } from "primevue/usetoast";
 
+    // import func api untuk upload logo
+    import { uploadLogo, deleteLogo } from "@/api/upload"
+
     // import schema untuk validasi komponen form
     import { businessProfileSchema } from "@/validation/businessProfileSchema";
 
@@ -19,6 +22,9 @@
     import Textarea from "primevue/textarea";
     // import Select from "primevue/select";
     import Button from "primevue/button";
+    import FileUpload from "primevue/fileupload";
+    import Image from "primevue/image";
+
     import Skeleton from "primevue/skeleton";
 
     import { getTenantProfile,updateTenantProfile } from "@/api/tenant";
@@ -32,8 +38,19 @@
     */
     const loading = ref(false);
     const saving = ref(false);
-    const logoPreview = ref("");
+    
+    const uploadingLogo = ref(false); // upload state
+    const originalLogo = ref(""); // dipakai untuk menghapus file lama setelah profile berhasil disimpan. 
 
+    const logoUrl = computed(() => {
+        if (!form.logo) return "";
+
+        return (
+            import.meta.env.VITE_SERVER_URL +
+            "/storage/logo/" +
+            form.logo
+        );
+    });
     /*
     |--------------------------------------------------------------------------
     | Dropdown Options
@@ -91,7 +108,8 @@
         address: "",
         currency: "IDR",
         time_zone: "Asia/Jakarta",
-        receipt_footer: ""
+        receipt_footer: "",
+        logo: ""
     });
 
     // state untuk original data => disable / enable button save changes
@@ -121,6 +139,8 @@
         try {
             const response = await getTenantProfile();
             Object.assign(form, response.data.data); // isi data ke form
+            // simpan original logo
+            originalLogo.value = response.data.data.logo;
 
             /*
             |--------------------------------------------------------------------------
@@ -150,9 +170,6 @@
             //     "Equal?",
             //     JSON.stringify(form) === JSON.stringify(originalData.value)
             // );
-
-            // logo preview
-            logoPreview.value = response.data.data.logo;
         } catch (error) {
             toast.add({
                 severity: "error",
@@ -180,7 +197,22 @@
         saving.value = true;
 
         try {
+            console.log("Payload Update:", JSON.stringify(form, null, 2));
+
             await updateTenantProfile(form);
+
+            // delete old logo
+            if (originalLogo.value && originalLogo.value !== form.logo) {
+                try {
+                    await deleteLogo(originalLogo.value);
+                } catch (err) {
+                    console.warn("Failed to delete old logo", err);
+                }
+            }
+
+            // update original logo
+            originalLogo.value = form.logo;
+
             // Reset dirty state
             originalData.value = JSON.parse(JSON.stringify(form));
             toast.add({
@@ -199,6 +231,109 @@
             });
         } finally {
             saving.value = false;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Upload Logo
+    |--------------------------------------------------------------------------
+    | Upload file ke backend kemudian update preview
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleLogoUpload(event) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil file pertama
+        |--------------------------------------------------------------------------
+        */
+
+        const file = event.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validasi ukuran
+        |--------------------------------------------------------------------------
+        */
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.add({
+                severity: "error",
+                summary: "Invalid File",
+                detail: "Maximum file size is 2 MB.",
+                life: 3000
+            });
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validasi tipe
+        |--------------------------------------------------------------------------
+        */
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            toast.add({
+                severity: "error",
+                summary: "Invalid File",
+                detail: "Only JPG and PNG are allowed.",
+                life: 3000
+            });
+            return;
+        }
+
+        uploadingLogo.value = true;
+
+        try {
+            /*
+            |--------------------------------------------------------------------------
+            | Multipart FormData
+            |--------------------------------------------------------------------------
+            */
+            const formData = new FormData();
+            formData.append("file", file);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Upload
+            |--------------------------------------------------------------------------
+            */
+            const response = await uploadLogo(formData);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan nama file ke form
+            |--------------------------------------------------------------------------
+            */
+            form.logo = response.data.data.file_name;
+
+            toast.add({
+                severity: "success",
+                summary: "Success",
+                detail: "Logo uploaded successfully.",
+                life: 3000
+            });
+
+        } catch (err) {
+            toast.add({
+                severity: "error",
+                summary: "Upload Failed",
+                detail:
+                    err?.response?.data?.message ??
+                    "Failed to upload logo.",
+                life: 3000
+            });
+        } finally {
+            uploadingLogo.value = false;
         }
     }
 
@@ -292,30 +427,48 @@
                     </div>
 
                     <div class="logo-container">
-                        <img
-                            v-if="logoPreview"
-                            :src="logoPreview"
-                            class="store-logo"
-                        />
-
-                        <div
-                            v-else
-                            class="logo-placeholder"
-                        >
-                            <i class="pi pi-image" />
+                        <!-- Logo Preview -->
+                        <div class="logo-preview">
+                            <Image
+                                v-if="form.logo"
+                                :src="logoUrl"
+                                width="160"
+                                preview
+                            />
+                            <div
+                                v-else
+                                class="logo-placeholder"
+                            >
+                                <i class="pi pi-shop"></i>
+                            </div>
                         </div>
 
-                        <Button
-                            label="Upload Logo"
-                            icon="pi pi-upload"
-                            severity="secondary"
-                            outlined
-                            disabled
-                        />
+                        <!-- Upload Area -->
+                        <div class="logo-upload">
+                            <div class="upload-title">
+                                Current Logo
+                            </div>
 
-                        <small class="logo-note">
-                            Upload feature will be available soon.
-                        </small>
+                            <div class="upload-description">
+                                Recommended image:
+                                <ul>
+                                    <li>JPG or PNG</li>
+                                    <li>Maximum 2 MB</li>
+                                    <li>Square image (recommended)</li>
+                                </ul>
+                            </div>
+
+                            <FileUpload
+                                mode="basic"
+                                accept="image/png,image/jpeg"
+                                :maxFileSize="2000000"
+                                :customUpload="true"
+                                :auto="true"
+                                :disabled="uploadingLogo"
+                                chooseLabel="Choose Logo"
+                                @uploader="handleLogoUpload"
+                            />
+                        </div>
                     </div>
                 </div>
                 
@@ -533,6 +686,64 @@
     .form-grid{
         grid-template-columns:1fr;
     }
+}
+
+/* css untuk logo, preview, dan keterangan */
+.logo-container{
+    display:flex;
+    align-items:flex-start;
+    gap:2rem;
+    margin-top:1rem;
+}
+
+.logo-preview{
+    width:180px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.logo-placeholder{
+    width:160px;
+    height:160px;
+
+    border:2px dashed #d1d5db;
+    border-radius:12px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:#fafafa;
+}
+
+.logo-placeholder i{
+    font-size:3.5rem;
+    color:#9ca3af;
+}
+
+.logo-upload{
+    flex:1;
+}
+
+.upload-title{
+    font-weight:600;
+    margin-bottom:.5rem;
+}
+
+.upload-description{
+    color:#6b7280;
+    margin-bottom:1rem;
+    line-height:1.5;
+}
+
+.upload-description ul{
+    margin-top:.5rem;
+    margin-left:0rem;
+}
+
+.upload-description li{
+    margin-bottom:.25rem;
 }
 
 </style>

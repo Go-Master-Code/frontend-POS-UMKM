@@ -11,18 +11,27 @@ export const menuItems = [
         icon: "pi pi-box",
         items: [
             {
+                key: "catalog_category",
+                label: "Catalog",
+                icon: "pi pi-tags",
+                route: "/catalog_category",
+            },
+            {
                 key: "items",
                 label: "Items",
+                icon: "pi pi-box",
                 route: "/items",
             },
             {
-                key: "categories",
-                label: "Categories",
-                route: "/categories",
+                key: "variants",
+                label: "Variants",
+                icon: "pi pi-sliders-h",
+                route: "/variants",
             },
             {
                 key: "suppliers",
                 label: "Suppliers",
+                icon: "pi pi-truck",
                 route: "/suppliers",
             },
             {

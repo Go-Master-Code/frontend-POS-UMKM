@@ -10,6 +10,7 @@ import MainLayout from '@/layouts/MainLayout.vue'
 // import untuk module bisnis
 import UserListView from '@/views/users/UserListView.vue'
 import BusinessProfileView from '@/views/settings/BusinessProfileView.vue'
+import CatalogCategoryListView from '@/views/catalog_category/CatalogCategoryListView.vue'
 
 // membuat instance vue router
 const router = createRouter({
@@ -57,6 +58,13 @@ const router = createRouter({
                     component: BusinessProfileView,
                     meta: {
                         title: "Business Profile",
+                    },
+                },
+                {
+                    path: "catalog_category", // berkaitan dengan file config/menu.js, path harus persis sama
+                    component: CatalogCategoryListView,
+                    meta: {
+                        title: "Catalog Category",
                     },
                 },
             ]

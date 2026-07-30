@@ -20,7 +20,8 @@ export function formatShortDate(dateString) {
 
     return new Intl.DateTimeFormat("en-GB", {
         day: "2-digit",
-        month: "short"
+        month: "short",
+        year: "numeric"
     }).format(date);
 
 }
