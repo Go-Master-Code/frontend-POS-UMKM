@@ -8,12 +8,6 @@ import api from "./index"
 |--------------------------------------------------------------------------
 */
 
-    // rg.GET("/catalog_items", h.GetCatalogItems)
-	// rg.GET("/catalog_items/:id", h.GetCatalogItemByID)
-	// rg.POST("/catalog_items", middleware.AuthRole(constants.RoleOwner, constants.RoleAdmin), h.CreateCatalogItem)
-	// rg.PUT("/catalog_items/:id", middleware.AuthRole(constants.RoleOwner, constants.RoleAdmin), h.UpdateCatalogItem)
-	// rg.DELETE("/catalog_items/:id", h.DeleteCatalogItem)
-
 /**
  * GET /catalog_items
  * Mengambil daftar seluruh catalog items di tenant saya.

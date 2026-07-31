@@ -75,6 +75,16 @@ const router = createRouter({
                         title: "Catalog Item",
                     },
                 },
+                {
+                    path: "/catalog/items/:id/variants",
+                    name: "catalog-item-variant",
+                    component: () =>
+                        import("@/views/item_variant/ItemVariantListView.vue"),
+                    meta: {
+                        requiresAuth: true,
+                        title: "Catalog Item Variant",
+                    },
+                }
             ]
         },
     ],

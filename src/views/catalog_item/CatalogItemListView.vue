@@ -16,12 +16,17 @@
     // confirm untuk delete
     import { useConfirm } from "primevue/useconfirm";
     import { useToast } from "primevue/usetoast";
+
+    // route untuk routing ke item variant
+    import { useRouter } from "vue-router";
     
     /*
     |--------------------------------------------------------------------------
     | State
     |--------------------------------------------------------------------------
     */
+    // router
+     const router = useRouter();
 
     // Data catalog item
     const catalog_item = ref([]);
@@ -319,6 +324,16 @@
             }
         });
     }
+
+    // function untuk routing ke halaman item variant ketika klik tombol gear (manage)
+    function goToVariant(item) {
+        router.push({
+            name: "catalog-item-variant",
+            params: {
+                id: item.id,
+            },
+        });
+    }
 </script>
 
 <template>
@@ -375,6 +390,7 @@
             @sort="handleSort"
             @edit="handleEdit"
             @delete="handleDelete"
+            @variant="goToVariant"
         />
     </div>
 

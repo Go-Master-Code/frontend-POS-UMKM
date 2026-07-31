@@ -23,10 +23,9 @@ export const menuItems = [
                 route: "/catalog_item",
             },
             {
-                key: "variants",
-                label: "Variants",
-                icon: "pi pi-sliders-h",
-                route: "/variants",
+                label: "Item Variant",
+                icon: "pi pi-tags",
+                route: "/catalog/items/55555555-5555-5555-5555-555555555551/variants",
             },
             {
                 key: "suppliers",

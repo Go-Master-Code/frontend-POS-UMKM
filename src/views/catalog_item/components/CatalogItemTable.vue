@@ -51,12 +51,12 @@
     | Emit
     |--------------------------------------------------------------------------
     */
-
     const emit = defineEmits([
         "page",
         "sort",
         "edit",
         "delete",
+        "variant",
     ]);
 
     /**
@@ -148,6 +148,13 @@
             style="width: 140px"
         >
             <template #body="{ data }">
+                <Button
+                    icon="pi pi-cog"
+                    text
+                    rounded
+                    severity="secondary"
+                    @click="$emit('variant',data)"
+                />
                 <Button
                     icon="pi pi-pencil"
                     text
