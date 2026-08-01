@@ -275,7 +275,7 @@
             // DEVELOPMENT ONLY
             //await new Promise(resolve => setTimeout(resolve, 2000));
             
-            lowStockItems.value = response.data.data;
+            lowStockItems.value = response.data.data ?? []; // nyatakan sebagai array kosong jika tidak ada data agar tidak ada warning console
         } catch(err) {
             console.error("Failed to load low stock items", err);
         } finally {

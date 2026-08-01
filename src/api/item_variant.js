@@ -10,3 +10,12 @@ export function getItemVariants(params = {}) {
         params,
     });
 }
+
+/**
+ * POST /item_variants
+ * Menambah item variant dari suatu category item
+ */
+
+export function createItemVariant(payload) {
+    return api.post("/item_variants", payload);
+}
