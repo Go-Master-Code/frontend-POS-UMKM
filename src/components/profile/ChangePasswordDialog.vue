@@ -156,6 +156,9 @@ function submitForm() {
         "save",
         { ...form}
     );
+
+    // reset form setelah selesai update
+    resetForm();
 }
 </script>
 

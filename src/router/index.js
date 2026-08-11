@@ -13,6 +13,9 @@ import BusinessProfileView from '@/views/settings/BusinessProfileView.vue'
 import CatalogCategoryListView from '@/views/catalog_category/CatalogCategoryListView.vue'
 import CatalogItemListView from '@/views/catalog_item/CatalogItemListView.vue'
 
+// import untuk kasir POS
+import SalesPOSView from '@/views/sales/SalesPOSView.vue'
+
 // membuat instance vue router
 const router = createRouter({
     // menggunakan mode history
@@ -73,6 +76,15 @@ const router = createRouter({
                     component: CatalogItemListView,
                     meta: {
                         title: "Catalog Item",
+                    },
+                },
+                {
+                    path: "/sales", // berkaitan dengan file config/menu.js, path harus persis sama
+                    name: "sales",
+                    component: SalesPOSView,
+                    meta: {
+                        requiresAuth: true,
+                        title: "Sales",
                     },
                 },
                 {
