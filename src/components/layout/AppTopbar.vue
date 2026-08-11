@@ -1,13 +1,13 @@
 <script setup>
-import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import Button from "primevue/button";
 import Menu from "primevue/menu";
 
-import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+// useconfirm untuk logout
+import { useConfirm } from "primevue/useconfirm"
 
 import { changePassword } from "@/api/users";
 import { useToast } from "primevue/usetoast";
@@ -18,8 +18,8 @@ import { menuItems } from "@/config/menu";
 import { findBreadcrumb } from "@/utils/breadcrumb";
 import Breadcrumb from "primevue/breadcrumb";
 
-// useconfirm untuk logout
-import { useConfirm } from "primevue/useconfirm"
+// import untuk breadcrumb
+import { getCatalogItemByID } from "@/api/catalog_items";
 
 const router = useRouter();
 const route = useRoute();
@@ -38,10 +38,46 @@ const confirm = useConfirm();
 
 const menu = ref();
 
-// Judul halaman (sementara)
+// state nama item untuk breadcrumb item variant
+const catalogItemName = ref("");
+
+// ============================================================
+// Breadcrumb
+// ============================================================
 const breadcrumbItems = computed(() => {
+
+    if (route.name === "catalog-item-variant") {
+
+        const masterData = menuItems.find(
+            item => item.key === "master"
+        );
+
+        const itemsMenu = masterData?.items?.find(
+            item => item.key === "items"
+        );
+
+        return [ // ambil label dan icon dari menu.js
+            {
+                label: masterData?.label || "Master Data",
+                icon: masterData?.icon,
+            },
+            {
+                label: itemsMenu?.label || "Items",
+                icon: itemsMenu?.icon,
+            },
+            {
+                label: catalogItemName.value || "Catalog Item",
+                icon: "pi pi-tag", // tentukan sendiri iconnya
+            },
+            {
+                label: "Variants",
+                icon: "pi pi-sliders-h",
+            },
+        ];
+    }
+
     return findBreadcrumb(menuItems, route.path);
-})
+});
 
 // Dropdown menu user
 const userMenuItems = ref([
@@ -139,6 +175,42 @@ async function savePassword(form) {
         passwordSaving.value = false;
     }
 }
+
+// function untuk mengambil nama catalog item untuk ditampilkan di breadcrumb
+async function loadCatalogItemName() {
+    // Hanya diperlukan pada halaman Item Variant
+    if (route.name !== "catalog-item-variant") {
+        catalogItemName.value = "";
+        return;
+    }
+
+    const catalogItemID = route.params.id;
+
+    if (!catalogItemID) {
+        catalogItemName.value = "";
+        return;
+    }
+
+    try {
+        const response = await getCatalogItemByID(catalogItemID);
+        // console.log("Catalog Item Response:", response.data);
+        catalogItemName.value = response.data.data.name;
+    } catch (err) {
+        console.error("Failed to load catalog item:", err);
+        catalogItemName.value = "Catalog Item";
+    }
+}
+
+onMounted(() => {
+    loadCatalogItemName();
+});
+
+watch(
+    () => route.params.id,
+    () => {
+        loadCatalogItemName();
+    }
+);
 </script>
 
 <template>

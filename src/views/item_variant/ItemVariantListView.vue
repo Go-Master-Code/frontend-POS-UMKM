@@ -5,7 +5,7 @@
 
     // Import API
     import { getCatalogItemByID } from "@/api/catalog_items";
-    import { createItemVariant, getItemVariants } from "@/api/item_variant";
+    import { createItemVariant, getItemVariants, getItemVariantByID, updateItemVariant, deleteItemVariant } from "@/api/item_variant";
 
     // Import component
     import Button from "primevue/button";
@@ -43,16 +43,16 @@
     const item_variant = ref([]);
     const loading = ref(false);
 
-    // search
-    const search = ref("");
+    // keyword pencarian
+    const keyword = ref("");
 
     // untuk pesan error dialog
     const backendError = ref("");
 
-    // sort column
+    // DEFAULT SORT COLUMN
     // const sortField = ref("created_at"); bisa langsung sort kolom saat halaman berisi tabel dibuka
-    const sortField = ref(null);
-    const sortOrder = ref(-1); // PrimeVue format (1 atau -1)
+    const sortField = ref("variant_name");
+    const sortOrder = ref(1); // // PrimeVue: 1 = ASC, -1 = DESC
 
     // id item variant yang sedang diedit
     const editingItemVariantId = ref(null);
@@ -92,6 +92,7 @@
             selling_price: "",
             minimum_stock: "",
             initial_stock: "",
+            current_stock: "",
             is_active: true,
         };
     }
@@ -116,12 +117,12 @@
      * Search dengan debounce agar tidak request setiap ketikan.
      */
     const debouncedSearch = useDebounceFn(() => {
-        page.value = 1;
-        loadCatalogItem();
+        currentPage.value = 1;
+        loadVariants();
     }, 400);
 
     // watcher saat searbox diketik
-    watch(search, () => {
+    watch(keyword, () => {
         debouncedSearch();
     });
 
@@ -130,9 +131,84 @@
         sortField.value = event.sortField;
         sortOrder.value = event.sortOrder;
 
-        page.value = 1; // reset ke page 1 saat sort
+        console.log(event.sortField);
+        console.log(event.sortOrder);
 
-        loadCatalogItem(); // load ulang data
+        currentPage.value = 1; // reset ke page 1 saat sort
+
+        loadVariants(); // load ulang data
+    }
+
+    // function untuk menampilkan data yang hendak diedit di dialog
+    async function handleEdit(item_variant) {
+        dialogMode.value = "edit";
+        editingItemVariantId.value = item_variant.id;
+        backendError.value = "";
+
+        try {
+            loading.value = true;
+            // ambil data terbaru dari backend
+            const response = await getItemVariantByID(item_variant.id);
+            // isi form
+            Object.assign(itemVariantForm.value, response.data.data);
+            dialogVisible.value = true
+        } catch (err) {
+            console.log("Error :", err.response?.data);
+            backendError.value = err.response?.data?.error ?? "Failed to save data.";
+            console.log("Backend error: ", backendError.value)
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    // confirm dialog untuk delete data
+    function handleDelete(item_variant) {
+        console.log(item_variant);
+        confirm.require({
+            header: "Delete Item Variant",
+            message: `Delete "${item_variant.variant_name}"?`,
+            icon: "pi pi-exclamation-triangle",
+            rejectLabel: "Cancel",
+            acceptLabel: "Delete",
+            rejectProps: {
+                severity: "secondary",
+                outlined: true
+            },
+            acceptProps: {
+                severity: "danger"
+            },
+            accept: async () => {
+                try {
+                    await deleteItemVariant(item_variant.id);
+
+                    toast.add({
+                        severity: "success",
+                        summary: "Deleted",
+                        detail: "Item variant deleted successfully.",
+                        life: 3000
+                    });
+
+                    await loadVariants();
+                } catch (err) {
+                    toast.add({
+                        severity: "error",
+                        summary: "Failed",
+                        detail:
+                            err.response?.data?.error ??
+                            "Failed to delete item variant.",
+                        life: 4000
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Menghapus keyword pencarian.
+     */
+    function clearSearch() {
+        currentPage.value = 1;
+        keyword.value = "";
     }
 
     /**
@@ -140,6 +216,14 @@
      */
     function clearBackendError() {
         backendError.value = "";
+    }
+
+    function formatNumber(value) {
+        if (value === null || value === undefined || value === "") {
+            return "0";
+        }
+
+        return new Intl.NumberFormat("id-ID").format(Number(value));
     }
 
     // lifecycle
@@ -184,7 +268,7 @@
                 catalog_item_id: catalogItemID,
                 page: currentPage.value,
                 limit: rows.value,
-                search: search.value,
+                search: keyword.value,
                 sort: sortField.value,
                 order: sortOrder.value === 1
                     ? "asc"
@@ -220,7 +304,7 @@
             if (dialogMode.value === "create") {
                 await createItemVariant(itemVariantForm.value);
             } else { // jika mode nya update
-                await updateCatalogItem(
+                await updateItemVariant(
                     editingItemVariantId.value,
                     itemVariantForm.value
                 );
@@ -304,21 +388,37 @@
         </Card>
 
         <!-- Toolbar -->
-        <Toolbar class="mt-4">
-            <template #start>
-                <IconField>
-                    <InputIcon class="pi pi-search" />
-                    <InputText placeholder="Search variant ..." />
-                </IconField>
-            </template>
-            <template #end>
-                <Button
-                    icon="pi pi-plus"
-                    label="Add Variant"
-                    @click="openCreateDialog"
+        <div class="toolbar">
+
+            <!-- Search -->
+            <div class="search-box">
+                <i class="pi pi-search search-icon" />
+
+                <InputText
+                    v-model="keyword"
+                    placeholder="Search variant..."
+                    class="search-input"
                 />
-            </template>
-        </Toolbar>
+
+                <Button
+                    v-if="keyword"
+                    icon="pi pi-times"
+                    text
+                    rounded
+                    severity="secondary"
+                    class="clear-btn"
+                    @click="clearSearch"
+                />
+            </div>
+
+            <!-- Action -->
+            <Button
+                icon="pi pi-plus"
+                label="Add Variant"
+                @click="openCreateDialog"
+            />
+
+        </div>
 
         <!-- Datatable -->
         <DataTable
@@ -352,6 +452,7 @@
             <Column
                 field="variant_name"
                 header="Variant"
+                sortable
             />
 
             <Column
@@ -367,12 +468,41 @@
             <Column
                 field="cost_price"
                 header="Cost Price"
-            />
+                bodyClass="number-cell"
+                sortable
+            >
+                <template #body="{ data }">
+                    {{ formatNumber(data.cost_price) }}
+                </template>
+            </Column>
 
             <Column
                 field="selling_price"
                 header="Selling Price"
-            />
+                bodyClass="number-cell"
+                sortable
+            >
+                <template #body="{ data }">
+                    {{ formatNumber(data.selling_price) }}
+                </template>
+            </Column>
+
+            <Column
+                field="current_stock"
+                header="Stock"
+                sortable
+                bodyClass="number-cell"
+            >
+                <template #body="{ data }">
+                    <span
+                        :class="{
+                            'stock-low': data.current_stock <= data.minimum_stock
+                        }"
+                    >
+                        {{ formatNumber(data.current_stock) }}
+                    </span>
+                </template>
+            </Column>
 
             <!-- Status -->
             <Column
@@ -394,19 +524,36 @@
             </Column>
 
             <Column header="Action">
-                <template #body>
-                    <Button
-                        icon="pi pi-pencil"
-                        text
-                    />
+                <template #body="{ data }">
+                    <div class="action-buttons">
+                        <Button
+                            icon="pi pi-pencil"
+                            text
+                            @click="handleEdit(data)"
+                        />
 
-                    <Button
-                        icon="pi pi-trash"
-                        text
-                        severity="danger"
-                    />
+                        <Button
+                            icon="pi pi-trash"
+                            text
+                            severity="danger"
+                            @click="handleDelete(data)"
+                        />
+                    </div>
                 </template>
             </Column>
+
+            <!-- emptymessage jika data search tidak ditemukan -->
+            <template #empty>
+                <div class="empty-state">
+                    <i class="pi pi-search empty-icon"></i>
+                    <div class="empty-title">
+                        No items found
+                    </div>
+                    <div class="empty-description">
+                        Try changing your search keyword.
+                    </div>
+                </div>
+            </template>
         </DataTable>
     </div>
 
@@ -462,5 +609,83 @@
     margin-top:4px;
     color:#6b7280;
     font-size:.9rem;
+}
+
+.toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:1rem;
+    margin-bottom:16px;
+}
+
+.search-box{
+    position:relative;
+    width:320px;
+}
+
+.search-input{
+    width:100%;
+    padding-left:2.2rem;
+    padding-right:2.2rem;
+}
+
+.search-icon{
+    position:absolute;
+    left:.75rem;
+    top:50%;
+    transform:translateY(-50%);
+    color:#6b7280;
+}
+
+.clear-btn{
+    position:absolute;
+    right:.25rem;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.empty-state{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:48px 16px;
+    color:#6b7280;
+}
+
+.empty-icon{
+    font-size:2rem;
+    margin-bottom:12px;
+    color:#9ca3af;
+}
+
+.empty-title{
+    font-size:16px;
+    font-weight:600;
+    color:#374151;
+}
+
+.empty-description{
+    margin-top:4px;
+    font-size:14px;
+}
+
+.stock-low {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+/* css rata kanan untuk angka di table */
+:deep(.number-cell) { 
+    text-align: right;
 }
 </style>

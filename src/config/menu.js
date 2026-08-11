@@ -8,11 +8,11 @@ export const menuItems = [
     {
         key: "master",
         label: "Master Data",
-        icon: "pi pi-box",
+        icon: "pi pi-database",
         items: [
             {
                 key: "catalog_category",
-                label: "Catalog",
+                label: "Category",
                 icon: "pi pi-tags",
                 route: "/catalog_category",
             },
@@ -22,11 +22,11 @@ export const menuItems = [
                 icon: "pi pi-box",
                 route: "/catalog_item",
             },
-            {
-                label: "Item Variant",
-                icon: "pi pi-tags",
-                route: "/catalog/items/55555555-5555-5555-5555-555555555551/variants",
-            },
+            // { MENU SHORTCUT KE ITEM VARIANT LANGSUNG => TAHAP DEVELOPMENT
+            //     label: "Item Variant",
+            //     icon: "pi pi-tags",
+            //     route: "/catalog/items/55555555-5555-5555-5555-555555555551/variants",
+            // },
             {
                 key: "suppliers",
                 label: "Suppliers",
@@ -36,12 +36,13 @@ export const menuItems = [
             {
                 key: "customers",
                 label: "Customers",
+                icon: "pi pi-users",
                 route: "/customers",
             },
             {
                 key: "users",
                 label: "Users",
-                icon: "pi pi-users",
+                icon: "pi pi-user",
                 route: "/users",
             },
         ],

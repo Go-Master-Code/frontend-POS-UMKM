@@ -1,7 +1,13 @@
 import { z } from "zod";
 
-export const itemVariantSchema = z.object({
-    // variant
+// =======================================
+// Base schema
+// Digunakan oleh Create dan Update
+// =======================================
+
+const itemVariantBaseSchema = z.object({
+
+    // Variant
     variant_name: z
         .string()
         .trim()
@@ -18,31 +24,20 @@ export const itemVariantSchema = z.object({
         .string()
         .trim()
         .max(100, "Maximum 100 characters.")
-        .optional(), // artinya tidak harus diisi, di db pun allow null
+        .optional(),
 
-    // Cost Price
     cost_price: z
         .number({
             required_error: "Cost price is required.",
         })
         .min(0, "Cost price cannot be negative."),
 
-     // Selling Price
     selling_price: z
         .number({
             required_error: "Selling price is required.",
         })
         .min(0, "Selling price cannot be negative."),
 
-     // Current Stock
-    initial_stock: z
-        .number({
-            required_error: "Initial stock is required.",
-        })
-        .int("Current stock must be an integer.")
-        .min(0, "Initial stock cannot be negative."),
-
-    // Minimum Stock
     minimum_stock: z
         .number({
             required_error: "Minimum stock is required.",
@@ -50,14 +45,43 @@ export const itemVariantSchema = z.object({
         .int("Minimum stock must be an integer.")
         .min(0, "Minimum stock cannot be negative."),
 
-    // Status
     is_active: z.boolean(),
 
-})
-.refine( // validasi membandingkan selling price dengan cost price
-    (data) => data.selling_price >= data.cost_price,
-    {
-        path: ["selling_price"],
-        message: "Selling price must be greater than or equal to cost price.",
-    }
-);
+});
+
+// =======================================
+// Create Schema
+// Tambahan Initial Stock
+// =======================================
+
+export const createItemVariantSchema = itemVariantBaseSchema
+    .extend({
+        initial_stock: z
+            .number({
+                required_error: "Initial stock is required.",
+            })
+            .int("Initial stock must be an integer.")
+            .min(0, "Initial stock cannot be negative."),
+
+    })
+    .refine(
+        (data) => data.selling_price >= data.cost_price,
+        {
+            path: ["selling_price"],
+            message: "Selling price must be greater than or equal to cost price.",
+        }
+    );
+
+// =======================================
+// Update Schema
+// Tidak memiliki Initial Stock
+// =======================================
+
+export const updateItemVariantSchema = itemVariantBaseSchema
+    .refine(
+        (data) => data.selling_price >= data.cost_price,
+        {
+            path: ["selling_price"],
+            message: "Selling price must be greater than or equal to cost price.",
+        }
+    );

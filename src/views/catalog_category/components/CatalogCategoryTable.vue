@@ -127,20 +127,22 @@
             style="width: 140px"
         >
             <template #body="{ data }">
-                <Button
-                    icon="pi pi-pencil"
-                    text
-                    rounded
-                    severity="warning"
-                    @click="$emit('edit',data)"
-                />
-                <Button
-                    icon="pi pi-trash"
-                    text
-                    rounded
-                    severity="danger"
-                    @click="$emit('delete',data)"
-                />
+                <div class="action-buttons">
+                    <Button
+                        icon="pi pi-pencil"
+                        text
+                        rounded
+                        severity="warning"
+                        @click="$emit('edit',data)"
+                    />
+                    <Button
+                        icon="pi pi-trash"
+                        text
+                        rounded
+                        severity="danger"
+                        @click="$emit('delete',data)"
+                    />
+                </div>
             </template>
         </Column>
 
@@ -185,6 +187,14 @@
 .empty-description{
     margin-top:4px;
     font-size:14px;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 </style>

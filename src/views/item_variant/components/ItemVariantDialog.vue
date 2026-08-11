@@ -6,7 +6,7 @@ import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber"
 import ToggleSwitch from "primevue/toggleswitch";
 import Button from "primevue/button";
-import { itemVariantSchema } from "@/validation/itemVariantSchema";
+import { createItemVariantSchema,updateItemVariantSchema } from "@/validation/itemVariantSchema";
 
 import Message from "primevue/message"; // untuk tampilkan error backend
 
@@ -126,7 +126,10 @@ function validateForm() {
     });
 
     // pilih skema yang digunakan, create dan edit berbeda.
-    const schema = itemVariantSchema
+    const schema =
+        props.mode === "create"
+            ? createItemVariantSchema
+            : updateItemVariantSchema;
 
     const result = schema.safeParse(props.form); // schema dipilih berdasarkan mode
 
@@ -241,7 +244,7 @@ function submitForm() {
 
             <!-- Current Stock -->
             <div 
-                v-if="dialogMode === 'create'"
+                v-if="props.mode === 'create'"
                 class="field"
             >
                 <label>Initial Stock</label>
