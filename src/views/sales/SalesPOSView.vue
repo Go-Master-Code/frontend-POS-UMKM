@@ -1,12 +1,21 @@
 <script setup>
-    import { ref, computed } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
 
     import POSProductGrid from '@/components/sales/pos/POSProductGrid.vue';
     import POSSearchBar from '@/components/sales/pos/POSSearchBar.vue';
     import POSCart from '@/components/sales/pos/POSCart.vue';
     import POSPaymentDialog from '@/components/sales/pos/POSPaymentDialog.vue';
+    import POSCategoryFilter from '@/components/sales/pos/POSCategoryFilter.vue';
+
+    // import api untuk mendapatkan category item
+    import { getCatalogItems } from '@/api/catalog_items';
 
     // state
+    // catalog item
+    const catalogItems = ref([]);
+    const catalogLoading = ref(false);
+    const catalogError = ref(null);
+
     const cartItems = ref([]);
 
     // Discount transaksi dalam nominal Rupiah. // Nanti bisa dikembangkan menjadi percentage atau promo.
@@ -144,6 +153,38 @@
 
         paymentDialogVisible.value=true;
     }
+
+    // function untuk load all category items per tenant
+    async function fetchCatalogItems() {
+        catalogLoading.value = true;
+        catalogError.value = null;
+
+        // coba eksekusi endpoint
+        try {
+            const response = await getCatalogItems({
+                page: 1,
+                limit: 100,
+            });
+
+            // jika tidak ada data, maka jadikan array kosong biar tidak null
+            catalogItems.value = response.data.data ?? [];
+
+            console.log("CATALOG ITEMS:", catalogItems.value);
+        } catch (error) {
+            console.error("Failed to load catalog items", error);
+            catalogError.value="Failed to load catalog items";
+        } finally {
+            catalogLoading.value = false;
+        }
+    }
+
+    /*
+    * Jalankan request ketika Sales POS pertama kali
+    * dibuka.
+    */
+    onMounted(() => {
+        fetchCatalogItems();
+    });
 </script>
 
 <template>
@@ -166,6 +207,10 @@
                     <POSSearchBar />
                 </div>
 
+                <!--Filter berdasarkan kategory-->
+                <POSCategoryFilter />
+
+                <!--Daftar product cards-->
                 <div class="products-content">
                     <POSProductGrid
                         :cart-items="cartItems"

@@ -424,4 +424,24 @@ import { meta } from "zod/v4/core";
 .change-section {
     margin-top: 16px;
 }
+
+/* Style untuk non-cash-info */
+.non-cash-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 10px;
+
+    font-size: 14px;
+}
+
+/* payment warning saat amount < total harga */
+.payment-warning {
+    display: block;
+    margin-top: 8px;
+    color: #ef4444;
+    font-size: 14px;
+    font-weight: 600;
+}
 </style>
