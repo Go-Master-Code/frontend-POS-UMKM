@@ -9,12 +9,131 @@
 
     // import api untuk mendapatkan category item
     import { getCatalogItems } from '@/api/catalog_items';
+    // import api untuk mendapatkan item variants
+    import { getItemVariants } from '@/api/item_variant';
 
     // state
-    // catalog item
+    // ============================================================
+    // CATALOG ITEMS
+    // ============================================================
     const catalogItems = ref([]);
     const catalogLoading = ref(false);
     const catalogError = ref(null);
+
+    // ============================================================================
+    // CATEGORY FILTER
+    // ============================================================================
+    //
+    // "all" berarti seluruh produk ditampilkan.
+    //
+    // Jika berisi category ID tertentu,
+    // hanya variant dari category tersebut yang ditampilkan.
+    //
+    // ============================================================================
+    const selectedCategory = ref("all"); // default value
+
+    // ============================================================================
+    // CATEGORY LIST
+    // ============================================================================
+
+    /**
+     * Membentuk daftar category unik dari catalog items.
+     *
+     * Beberapa catalog item dapat berada dalam category yang sama.
+     *
+     * Contoh:
+     *
+     * Keripik Singkong → Snack
+     * Keripik Pisang   → Snack
+     * Kerupuk Kulit    → Makanan Kering
+     * Nagasari         → Kue Basah
+     *
+     * Hasil:
+     *
+     * All
+     * Snack
+     * Kue Basah
+     */
+    const categories = computed(() => {
+        const categoryMap = new Map();
+
+        // catalogItems sudah berisi data setelah function fetchCatalogItems() dieksekusi
+        catalogItems.value.forEach(item => {
+            if(!item.category_id) {
+                return;
+            }
+
+            if(!categoryMap.has(item.category_id)) { // jika category id belum ada, tambahkan ke dalam Map
+                categoryMap.set(
+                    item.category_id,
+                    {
+                        id: item.category_id,
+                        name: item.category_name,
+                    }
+                );
+            }
+        });
+
+        return [
+            {
+                id: "all",
+                name: "All",
+            },
+            ...Array.from(categoryMap.values()),
+        ];
+    });
+
+    // ============================================================================
+    // FILTERED PRODUCTS
+    // ============================================================================
+
+    /**
+     * Menentukan variant yang ditampilkan pada Product Grid.
+     *
+     * "all":
+     * → tampilkan seluruh variant.
+     *
+     * category ID:
+     * → hanya tampilkan variant dari category tersebut.
+     */
+
+    const filteredProducts = computed(() => {
+        // ALL
+        if (selectedCategory.value === "all") {
+            return products.value
+        }
+
+        // CATEGORY FILTER
+        return products.value.filter(
+            product =>
+                product.category_id === selectedCategory.value
+        )
+    })
+
+    // ============================================================================
+    // CATEGORY CHANGE
+    // ============================================================================
+
+    /**
+     * Dipanggil oleh POSCategoryFilter ketika kasir
+     * memilih category.
+     */
+    function handleCategoryChange(category) {
+        selectedCategory.value = category.id;
+    }
+
+    // ============================================================
+    // ITEM VARIANTS
+    // ============================================================
+    //
+    // Data inilah yang nantinya ditampilkan oleh POSProductGrid.
+    //
+    // Satu product card = satu item variant.
+    //
+    // ============================================================
+    const products = ref([])
+    const variantLoading = ref(false);
+    const variantError = ref(null);
 
     const cartItems = ref([]);
 
@@ -83,10 +202,13 @@
 
     // functions
     function addToCart(product) {
-        console.log("ADD PRODUCT:", product);
+        console.log("=== ADD TO CART ===");
+        console.log("Product:", product);
+        console.log("Product variant ID:", product.id);
+        console.log("Current cart:", cartItems.value);
 
         const existingItem = cartItems.value.find(
-            item => item.item_variant_id === product.item_variant_id
+            item => item.id === product.id
         );
 
         // Jika produk sudah ada di cart
@@ -102,12 +224,12 @@
 
         // Item baru selalu dimulai dengan qty 1.
         cartItems.value.push({
-            item_variant_id: product.item_variant_id,
+            id: product.id,
             item_name: product.item_name,
             variant_name: product.variant_name,
             sku: product.sku,
             selling_price: product.selling_price,
-            stock: product.stock,
+            current_stock: product.current_stock,
             qty: 1,
         });
     }
@@ -130,7 +252,7 @@
         // jika item.qty = 1 maka hapus item dari cartItems
         cartItems.value = cartItems.value.filter(
             cartItem =>
-                cartItem.item_variant_id !== item.item_variant_id
+                cartItem.id !== item.id
         );
     }
 
@@ -178,12 +300,40 @@
         }
     }
 
+    /**
+     * Mengambil seluruh item variant milik tenant
+     * untuk ditampilkan pada Product Grid.
+     *
+     * Cek Response Backend dengan variable di POSProductGrid
+     * bisa disamakan atau jika berbeda harus di mapping dulu disini
+     */
+    async function fetchItemVariants() {
+        variantLoading.value = true;
+        variantError.value = null;
+
+        try {
+            const response = await getItemVariants({
+                page: 1,
+                limit: 100,
+            });
+
+            products.value = response.data.data ?? [];
+            console.log("ITEM VARIANTS:",products.value)
+        } catch(error) {
+            console.error("Failed to load item variants",error)
+            variantError.value = "Failed to load item variants";
+        } finally {
+            variantLoading.value = false;
+        }
+    }
+
     /*
     * Jalankan request ketika Sales POS pertama kali
     * dibuka.
     */
     onMounted(() => {
         fetchCatalogItems();
+        fetchItemVariants();
     });
 </script>
 
@@ -203,16 +353,23 @@
                 LEFT : PRODUCT AREA
                 ========================================== -->
             <section class="pos-products">
+
+                <!-- Search -->
                 <div class="products-toolbar">
                     <POSSearchBar />
                 </div>
 
                 <!--Filter berdasarkan kategory-->
-                <POSCategoryFilter />
+                <POSCategoryFilter 
+                    :categories="categories"
+                    :selected-category="selectedCategory"
+                    @change="handleCategoryChange"
+                />
 
                 <!--Daftar product cards-->
                 <div class="products-content">
                     <POSProductGrid
+                        :products="filteredProducts"
                         :cart-items="cartItems"
                         @add="addToCart"
                     />

@@ -318,7 +318,8 @@
     margin-top: 2px;
 
     font-size: 12px;
-    color: #6b7280;
+    color: #17991e;
+    font-weight: 600;
 }
 
 .cart-item-price {

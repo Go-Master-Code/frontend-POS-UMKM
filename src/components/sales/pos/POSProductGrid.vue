@@ -2,65 +2,19 @@
     import Button from "primevue/button";
 
     // terima properti cartItems dari SalesPOSView
+    // jadi, POSProductGrid menerima products dan cartItems dari PARENT
     const props = defineProps({
         cartItems: {
+            type: Array,
+            default: () => [],
+        },
+        products: {
             type: Array,
             default: () => [],
         },
     });
 
     const emit = defineEmits(["add"]);
-
-    const products = [
-        {
-            item_variant_id: "1",
-            item_name: "Keripik Singkong",
-            variant_name: "Pedas Balado",
-            sku: "KS-PB-500",
-            selling_price: 15000,
-            stock: 23,
-        },
-        {
-            item_variant_id: "2",
-            item_name: "Keripik Singkong",
-            variant_name: "Asin Bawang",
-            sku: "KS-AB-500",
-            selling_price: 15000,
-            stock: 18,
-        },
-        {
-            item_variant_id: "3",
-            item_name: "Keripik Singkong",
-            variant_name: "Pedas Daun Jeruk",
-            sku: "KS-PDJ-500",
-            selling_price: 16000,
-            stock: 12,
-        },
-        {
-            item_variant_id: "4",
-            item_name: "Keripik Pisang",
-            variant_name: "Coklat",
-            sku: "KP-CK-250",
-            selling_price: 12000,
-            stock: 15,
-        },
-        {
-            item_variant_id: "5",
-            item_name: "Keripik Pisang",
-            variant_name: "Keju",
-            sku: "KP-KJ-250",
-            selling_price: 13000,
-            stock: 8,
-        },
-        {
-            item_variant_id: "6",
-            item_name: "Basreng",
-            variant_name: "Pedas",
-            sku: "BR-PD-250",
-            selling_price: 10000,
-            stock: 31,
-        },
-    ];
 
     function formatPrice(value) {
         return new Intl.NumberFormat("id-ID").format(value);
@@ -69,22 +23,56 @@
     // helper untuk mencari apakah produk sudah ada di dalam cart
     function getCartQty(product) {
         const cartItem = props.cartItems.find(
-            item => item.item_variant_id === product.item_variant_id
+            item => item.id === product.id
         );
 
         return cartItem?.qty ?? 0;
     }
 
+    // ============================================================================
+    // CHECK ADD BUTTON
+    // ============================================================================
+    //
+    // Tombol Add disabled ketika quantity di cart sudah mencapai stock.
+    //
+    // Contoh:
+    //
+    // Stock       = 8
+    // Cart        = 8
+    // Add         = disabled
+    //
+    // Dengan demikian kasir tidak bisa menambahkan quantity ke-9.
+    //
+    // ============================================================================
+
     // helper untuk menentukan apakah tombol harus disabled
     function isAddDisabled(product) {
-        return getCartQty(product) >= product.stock;
+        return getCartQty(product) >= product.current_stock;
     }
 </script>
 
 <template>
-    <div class="product-grid">
+    <!-- Jika item variants dari suatu category belum ada -->
+    <div
+        v-if="props.products.length === 0"
+        class="product-empty"
+    >
+        <i class="pi pi-search"></i>
+
+        <strong>
+            No variants found
+        </strong>
+
+        <span>
+            Try to add some variants.
+        </span>
+    </div>
+    <div
+        v-else
+        class="product-grid"
+    >
         <div
-            v-for="product in products"
+            v-for="product in props.products"
             :key="product.id"
             class="product-card"
         >
@@ -114,13 +102,14 @@
                 <span
                     class="product-stock"
                     :class="{
-                        'stock-low': product.stock <= 5
+                        'stock-low': product.current_stock <= 5
                     }"
                 >
-                    Stock {{ product.stock }}
+                    Stock {{ product.current_stock }}
                 </span>
             </div>
 
+            <!-- Add to cart -->
             <Button
                 :label="
                     isAddDisabled(product)
@@ -253,7 +242,7 @@
     font-size: 13px;
     margin-top: 2px;
 
-    color: #4b5563;
+    color: #17991e;
 
     white-space: nowrap;
     overflow: hidden;
@@ -305,5 +294,47 @@
 
 .stock-low {
     color: #dc2626;
+}
+
+/* CSS untuk catalog item yang belum mempunyai variants */
+.product-empty {
+    min-height: 280px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    text-align: center;
+
+    color: var(--text-color-secondary);
+}
+
+
+.product-empty i {
+    font-size: 32px;
+
+    margin-bottom: 6px;
+
+    color: var(--text-color-secondary);
+}
+
+
+.product-empty strong {
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: var(--text-color);
+}
+
+
+.product-empty span {
+    font-size: 13px;
+
+    color: var(--text-color-secondary);
 }
 </style>
