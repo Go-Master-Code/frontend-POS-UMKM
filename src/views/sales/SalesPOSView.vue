@@ -19,6 +19,61 @@
     const catalogItems = ref([]);
     const catalogLoading = ref(false);
     const catalogError = ref(null);
+    const searchKeyword = ref("");
+
+    // ref ke search bar di POSSearchBar.vue
+    const searchBarRef = ref(null);
+
+    // state feedback barcode
+    const barcodeFeedback = ref({
+        type: "",
+        message: "",
+        // akan menggunakan success, error, warning
+    })
+
+    // fungsi suara untuk scan barcode
+    function playBarcodeSound(type) {
+        const audioContext =
+            new(window.AudioContext || window.webkitAudioContext) ();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        if (type==="success") {
+            oscillator.frequency.value = 880;
+        } else if (type==="warning") {
+            oscillator.frequency.value = 520;
+        } else {
+            oscillator.frequency.value = 220;
+        }
+
+        gainNode.gain.value = 0.08;
+
+        oscillator.start();
+
+        oscillator.stop(
+            audioContext.currentTime + 0.12
+        );
+    }
+
+    // HELPER FEEDBACK
+    function showBarcodeFeedback(type, message) {
+        barcodeFeedback.value = {
+            type,
+            message,
+        };
+
+        playBarcodeSound(type);
+
+        setTimeout(() => {
+            barcodeFeedback.value = {
+                type: "",
+                message: "",
+            };
+        }, 2000); // pesan hanya muncul sekitar 2 detik
+    }
 
     // ============================================================================
     // CATEGORY FILTER
@@ -98,17 +153,36 @@
      */
 
     const filteredProducts = computed(() => {
-        // ALL
-        if (selectedCategory.value === "all") {
-            return products.value
-        }
-
-        // CATEGORY FILTER
-        return products.value.filter(
-            product =>
-                product.category_id === selectedCategory.value
-        )
-    })
+        const keyword = searchKeyword.value
+            .trim()
+            .toLowerCase();
+        
+        return products.value.filter(product => {
+            // CATEGORY
+            const matchesCategory =
+                selectedCategory.value === "all" ||
+                product.category_id === selectedCategory.value;
+            
+            // SEARCH by: item_name or variant_name or sku or barcode
+            const matchesSearch =
+                keyword === "" ||
+                product.item_name
+                    ?.toLowerCase()
+                    .includes(keyword) ||
+                product.variant_name
+                    ?.toLowerCase()
+                    .includes(keyword) ||
+                product.sku
+                    ?.toLowerCase()
+                    .includes(keyword) ||
+                product.barcode
+                    ?.toLowerCase()
+                    .includes(keyword);
+                
+            // FINAL
+            return matchesCategory && matchesSearch
+        });
+    });
 
     // ============================================================================
     // CATEGORY CHANGE
@@ -327,6 +401,79 @@
         }
     }
 
+    // handler search
+    function handleSearch(keyword) {
+        searchKeyword.value = keyword;
+    }
+
+    // handler barcode
+    function handleBarcode(barcode) {
+        const normalizedBarcode = String(barcode).trim();
+
+        if (!normalizedBarcode) {
+            return;
+        }
+
+        // cek apakah barcode yang diinput ditemukan di array products
+        const product = products.value.find( // find dilakukan pada products bukan ke filtered products agar sistem tetap dapat mencari barcode tertentu pada seluruh list product yang dimiliki
+            product =>
+                String(product.barcode).trim() === normalizedBarcode
+        );
+
+        // ================================================================
+        // BARCODE TIDAK DITEMUKAN
+        // ================================================================
+        if (!product) {
+            showBarcodeFeedback(
+                "error",
+                `Barcode ${normalizedBarcode} tidak ditemukan.`
+            );
+
+            return;
+        }
+
+        // ================================================================
+        // CEK STOCK
+        // ================================================================
+        const existingItem = cartItems.value.find(
+            item =>
+                item.id === product.id
+        );
+
+        const currentQty = existingItem?.qty ?? 0; // ambil qty yang ada di sales cart
+
+        // ================================================================
+        // STOCK HABIS / MAX QTY
+        // ================================================================
+        if (currentQty >= product.current_stock) { // bandingkan qty yang ada di sales cart dengan current_stock (stok yang tersedia dari db)
+            showBarcodeFeedback(
+                "warning",
+                `${product.item_name} - ${product.variant_name} exceeding stock.`
+            );
+
+            return;
+        }
+
+        // ================================================================
+        // ADD TO CART
+        // ================================================================
+        addToCart(product)
+
+        // ================================================================
+        // CLEAR SEARCH
+        // ================================================================
+        searchKeyword.value = ""; // state di parent
+        searchBarRef.value?.clearSearchInput(); // state internal POSSearchBar
+
+        // ================================================================
+        // SUCCESS FEEDBACK
+        // ================================================================
+        showBarcodeFeedback(
+            "success",
+            `${product.item_name} - ${product.variant_name} has been added.`
+        );
+    }
+
     /*
     * Jalankan request ketika Sales POS pertama kali
     * dibuka.
@@ -356,7 +503,30 @@
 
                 <!-- Search -->
                 <div class="products-toolbar">
-                    <POSSearchBar />
+                    <POSSearchBar
+                        ref="searchBarRef"
+                        @search="handleSearch"
+                        @barcode="handleBarcode"
+                    />
+                    <div
+                        v-if="barcodeFeedback.message"
+                        class="barcode-feedback"
+                        :class="`barcode-feedback--${barcodeFeedback.type}`"
+                    >
+                        <i
+                            :class="
+                                barcodeFeedback.type === 'success'
+                                    ? 'pi pi-check-circle'
+                                    : barcodeFeedback.type === 'warning'
+                                        ? 'pi pi-exclamation-triangle'
+                                        : 'pi pi-times-circle'
+                            "
+                        ></i>
+
+                        <span>
+                            {{ barcodeFeedback.message }}
+                        </span>
+                    </div>
                 </div>
 
                 <!--Filter berdasarkan kategory-->
@@ -578,6 +748,41 @@
     line-height: 1.5;
 }
 
+.barcode-feedback {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 8px;
+    padding: 7px 10px;
+
+    border-radius: 6px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+
+.barcode-feedback--success {
+    color: #166534;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+}
+
+
+.barcode-feedback--warning {
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+}
+
+
+.barcode-feedback--error {
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+}
 
 /* ==========================================
    RESPONSIVE

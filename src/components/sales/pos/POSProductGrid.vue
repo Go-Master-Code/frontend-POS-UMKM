@@ -60,11 +60,11 @@
         <i class="pi pi-search"></i>
 
         <strong>
-            No variants found
+            No items found.
         </strong>
 
         <span>
-            Try to add some variants.
+            This category has no products.
         </span>
     </div>
     <div
