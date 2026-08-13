@@ -5,7 +5,6 @@
     import Button from "primevue/button";
     import Select from "primevue/select";
     import InputNumber from "primevue/inputnumber";
-import { meta } from "zod/v4/core";
 
     // ============================================================
     // PROPS
@@ -148,12 +147,12 @@ import { meta } from "zod/v4/core";
             return;
         }
         emit("complete", {
-            payment_menthod: paymentMethod.value,
+            payment_method: paymentMethod.value,
             amount_received:
                 paymentMethod.value === "CASH"
                     ? amountReceived.value
                     : props.grandTotal,
-            change: change.value,
+            change: change.value, // change sebenarnya tidak diperlukan karena bisa dihitung dari amount_received - grand total di db
         });
     }
 

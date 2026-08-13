@@ -6,11 +6,15 @@
     import POSCart from '@/components/sales/pos/POSCart.vue';
     import POSPaymentDialog from '@/components/sales/pos/POSPaymentDialog.vue';
     import POSCategoryFilter from '@/components/sales/pos/POSCategoryFilter.vue';
-
+    // import Dialog for successful payment
+    import POSPaymentSuccess from '@/components/sales/pos/POSPaymentSuccess.vue';
+    
     // import api untuk mendapatkan category item
     import { getCatalogItems } from '@/api/catalog_items';
     // import api untuk mendapatkan item variants
     import { getItemVariants } from '@/api/item_variant';
+    // import api untuk create sales
+    import { createSale } from '@/api/sales';
 
     // state
     // ============================================================
@@ -20,6 +24,10 @@
     const catalogLoading = ref(false);
     const catalogError = ref(null);
     const searchKeyword = ref("");
+
+    // transaction success
+    const completedSale = ref(null);
+    const transactionSuccessVisible = ref(false);
 
     // ref ke search bar di POSSearchBar.vue
     const searchBarRef = ref(null);
@@ -392,9 +400,9 @@
             });
 
             products.value = response.data.data ?? [];
-            console.log("ITEM VARIANTS:",products.value)
+            console.log("ITEM VARIANTS:",products.value);
         } catch(error) {
-            console.error("Failed to load item variants",error)
+            console.error("Failed to load item variants",error);
             variantError.value = "Failed to load item variants";
         } finally {
             variantLoading.value = false;
@@ -472,6 +480,51 @@
             "success",
             `${product.item_name} - ${product.variant_name} has been added.`
         );
+    }
+
+    // FUNCTION UNTUK CREATE NEW SALE
+    async function submitSale(paymentData) {
+        const payload = {
+            customer_name: paymentData.customer_name || "",
+            discount_amount: discount.value,
+            payment_method: paymentData.payment_method,
+            amount_received: paymentData.amount_received,
+            notes: paymentData.notes || "",
+
+            items: cartItems.value.map(item => ({
+                item_variant_id: item.id,
+                qty: item.qty,
+                discount_amount: 0, // sementara diskon sale item = 0
+            })),
+        };
+
+        console.log("CREATE SALE PAYLOAD:", payload);
+
+        try {
+            const response = await createSale(payload);
+
+            // DEBUG
+            // console.log("CREATE SALE RESPONSE:", response);
+            // console.log("API DATA:",response.data);
+            // console.log("SALES DATA:",response.data.data);
+
+            // masukkan data response.data.data yang berhasil disimpan ke completed sale
+            completedSale.value = response.data.data;
+            
+            // tutup payment dialog
+            paymentDialogVisible.value = false;
+
+            // kosongkan cart
+            cartItems.value = []; // array kosong
+
+            // reset discount
+            discountAmount.value = 0;
+
+            // tampilkan success feedback
+            transactionSuccessVisible.value = true;
+        } catch (error) {
+            console.error("Failed to submit sale", error);
+        }
     }
 
     /*
@@ -577,6 +630,12 @@
     <POSPaymentDialog
         v-model:visible="paymentDialogVisible"
         :grand-total="grandTotal"
+        @complete="submitSale"
+    />
+
+    <POSPaymentSuccess
+        v-model:visible="transactionSuccessVisible"
+        :sale="completedSale"
     />
 </template>
 
