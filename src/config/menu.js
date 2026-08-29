@@ -71,6 +71,12 @@ export const menuItems = [
         route: "/sales",
     },
     {
+        key: "unpaid_sales",
+        label: "Unpaid Sales",
+        icon: "pi pi-wallet",
+        route: "/unpaid_sales",
+    },
+    {
         key: "reports",
         label: "Reports",
         icon: "pi pi-chart-bar",

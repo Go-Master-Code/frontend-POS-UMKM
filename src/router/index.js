@@ -12,6 +12,9 @@ import UserListView from '@/views/users/UserListView.vue'
 import BusinessProfileView from '@/views/settings/BusinessProfileView.vue'
 import CatalogCategoryListView from '@/views/catalog_category/CatalogCategoryListView.vue'
 import CatalogItemListView from '@/views/catalog_item/CatalogItemListView.vue'
+import ItemVariantListView from '@/views/item_variant/ItemVariantListView.vue'
+import CustomerListView from '@/views/customer/CustomerListView.vue'
+import UnpaidSalesView from '@/views/sales/UnpaidSalesView.vue'
 
 // import untuk kasir POS
 import SalesPOSView from '@/views/sales/SalesPOSView.vue'
@@ -88,13 +91,30 @@ const router = createRouter({
                     },
                 },
                 {
+                    path: "/unpaid_sales", // berkaitan dengan file config/menu.js, path harus persis sama
+                    name: "unpaid_sales",
+                    component: UnpaidSalesView,
+                    meta: {
+                        requiresAuth: true,
+                        title: "Unpaid Sales",
+                    },
+                },
+                {
                     path: "/catalog/items/:id/variants",
                     name: "catalog-item-variant",
-                    component: () =>
-                        import("@/views/item_variant/ItemVariantListView.vue"),
+                    component: ItemVariantListView,
                     meta: {
                         requiresAuth: true,
                         title: "Catalog Item Variant",
+                    },
+                },
+                {
+                    path: "/customers",
+                    name: "customers",
+                    component: CustomerListView,
+                    meta: {
+                        requiresAuth: true,
+                        title: "Customers",
                     },
                 }
             ]

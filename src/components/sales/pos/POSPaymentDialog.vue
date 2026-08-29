@@ -19,6 +19,16 @@
         grandTotal: {
             type: Number,
             default: 0,
+        },
+
+        customers: {
+            type: Array,
+            default: () => [],
+        },
+
+        customerLoading: {
+            type: Boolean,
+            default: false,
         }
     })
 
@@ -34,10 +44,14 @@
     // STATE
     // ============================================================
     const paymentMethod = ref("CASH");
+    const paymentStatus = ref("PAID");
 
     // jumlah uang yang diterima dari customer
     // hanya digunakan untuk pembayaran CASH.
     const amountReceived = ref(0);
+
+    // const id untuk dimasukkan ke data sales
+    const customerID = ref(null);
 
     // ============================================================
     // PAYMENT METHODS
@@ -57,6 +71,19 @@
         },
     ];
 
+    // ============================================================
+    // PAYMENT METHODS
+    // ============================================================
+    const paymentStatuses = [
+        {
+            label: "PAID",
+            value: "PAID",
+        },
+        {
+            label: "UNPAID",
+            value: "UNPAID",
+        },
+    ]
     // ============================================================
     // COMPUTED
     // ============================================================
@@ -93,10 +120,17 @@
             return false;
         }
 
+        // UNPAID TIDAK MEMBUTUHKAN PEMBAYARAN SEKARANG
+        if (paymentStatus.value === 'UNPAID') {
+            return customerID.value !== null; // bisa disubmit jika customer sudah dipilih
+        }
+
+        // PAID + CASH
         if (paymentMethod.value === "CASH") {
             return amountReceived.value >= props.grandTotal;
         }
 
+        // PAID + QRIS / TRANSFER
         return true
     })
 
@@ -104,7 +138,7 @@
     // WATCHERS
     // ============================================================
     /*
-        Ketika dialog dibuka, reset state pembayaran
+        Ketika dialog dibuka, reset state pembayaran dan status
         Ini penting supaya transaksi baru tidak mewarisi nilai pembayaran dari transaksi sebelumnya
     */
     watch(
@@ -112,7 +146,9 @@
         (visible) => {
             if (visible) {
                 paymentMethod.value="CASH";
-                amountReceived.value = 0;
+                paymentStatus.value="PAID";
+                amountReceived.value=0;
+                customerID.value=null;
             }
         }
     );
@@ -147,12 +183,23 @@
             return;
         }
         emit("complete", {
+            customer_id:
+                paymentStatus.value === "UNPAID"
+                ? customerID.value
+                : null,
+                
             payment_method: paymentMethod.value,
+            payment_status: paymentStatus.value,
+
             amount_received:
-                paymentMethod.value === "CASH"
+                paymentMethod.value === "CASH" &&
+                paymentStatus.value === "PAID"
                     ? amountReceived.value
-                    : props.grandTotal,
-            change: change.value, // change sebenarnya tidak diperlukan karena bisa dihitung dari amount_received - grand total di db
+                    : 0, // jika unpaid maka amount received = 0
+            change:
+                paymentStatus.value === "PAID"
+                    ? change.value // change sebenarnya tidak diperlukan karena bisa dihitung dari amount_received - grand total di db
+                    : 0
         });
     }
 
@@ -202,8 +249,45 @@
             />
         </div>
 
+        <!-- PAYMENT STATUS PAID/UNPAID -->
+        <div class="payment-field">
+            <label for="payment-status">
+                Payment Status
+            </label>
+            <Select
+                id="payment-status"
+                v-model="paymentStatus"
+                :options="paymentStatuses"
+                option-label="label"
+                option-value="value"
+                class="w-full"
+            />
+        </div>
+
+        <!-- Combobox customer hanya muncul jika UNPAID -->
+        <div
+            v-if="paymentStatus === 'UNPAID'"
+            class="payment-field"
+        >
+            <label for="customer">
+                Customer
+            </label>
+
+            <Select
+                id="customer"
+                v-model="customerID"
+                :options="customers"
+                option-label="name"
+                option-value="id"
+                placeholder="Select customer"
+                :loading="customerLoading"
+                class="w-full"
+            />
+        </div>
+
         <!--CASH PAYMENT-->
-        <template v-if="paymentMethod === 'CASH'">
+        <!-- Amount received akan tampil jika method cash dan status nya paid -->
+        <template v-if="paymentStatus === 'PAID' && paymentMethod === 'CASH'">
             <div class="payment-field">
                 <label for="amount-received">
                     Amount received
@@ -245,9 +329,19 @@
             </small>
         </template>
 
-        <!--QRIS/TRANSFER-->
+        <!-- PAYMENT INFORMATION -->
+        <div v-if="paymentStatus === 'UNPAID'"
+            class="non-cash-info"
+        >
+            <i class="pi pi-clock"></i>
+            <span>
+                Payment will be recorded as unpaid.
+            </span>
+        </div>
+
+        <!--PAYMENT VIA QRIS OR TRANSFER-->
         <div
-            v-else
+            v-else-if="paymentMethod !== 'CASH'"
             class="non-cash-info"
         >
             <i class="pi pi-check-circle"></i>

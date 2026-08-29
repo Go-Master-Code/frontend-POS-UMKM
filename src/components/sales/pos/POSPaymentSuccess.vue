@@ -2,6 +2,8 @@
     import Dialog from "primevue/dialog";
     import Button from "primevue/button";
 
+    import { computed } from "vue";
+
     const props = defineProps({
         visible: {
             type: Boolean,
@@ -28,6 +30,23 @@
             minimumFractionDigits: 0,
         }).format(value);
     }
+    
+    // PAYMENT STATUS DISPLAY
+    const isPaid = computed(() => {
+        return props.sale?.payment_status === "PAID";
+    })
+
+    const successIcon = computed(() => {
+        return isPaid.value
+            ? "pi pi-check-circle"
+            : "pi pi-clock";
+    });
+
+    const successTitle = computed(() => {
+        return isPaid.value
+            ? "Payment Successful"
+            : "Payment Pending";
+    });
 </script>
 
 <template>
@@ -39,11 +58,17 @@
         @update:visible="emit('update:visible', $event)"
     >
         <div class="success-content">
-            <div class="success-icon">
-                <i class="pi pi-check"></i>
+            <div 
+                class="success-icon"
+                :class="{
+                    'success-icon-paid': isPaid,
+                    'success-icon-unpaid': !isPaid,
+                }"
+            >
+                <i :class="successIcon"></i>
             </div>
             <h3>
-                Payment Successful
+                {{ successTitle }}
             </h3>
             <p>
                 Transaction has been recorded successfully.
@@ -68,9 +93,25 @@
                 </div>
 
                 <div>
-                    <span>Payment</span>
+                    <span>Payment Method</span>
                     <strong>
                         {{ sale.payment_method }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Payment Status</span>
+                    <strong>
+                        {{ sale.payment_status }}
+                    </strong>
+                </div>
+
+                <div
+                    v-if="sale.payment_status === 'UNPAID'"
+                >
+                    <span>Customer</span>
+                    <strong>
+                        {{ sale.customer_name }}
                     </strong>
                 </div>
             </div>
@@ -103,10 +144,17 @@
 
     border-radius: 50%;
 
-    background: var(--p-green-100);
-    color: var(--p-green-600);
-
     font-size: 28px;
+}
+
+.success-icon-paid {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.success-icon-unpaid {
+    background: #fef3c7;
+    color: #d97706;
 }
 
 .success-content h3 {

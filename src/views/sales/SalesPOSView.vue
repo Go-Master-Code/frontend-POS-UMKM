@@ -15,6 +15,8 @@
     import { getItemVariants } from '@/api/item_variant';
     // import api untuk create sales
     import { createSale } from '@/api/sales';
+    // import api customer untuk payment
+    import { getCustomers } from '@/api/customer';
 
     // state
     // ============================================================
@@ -203,6 +205,13 @@
     function handleCategoryChange(category) {
         selectedCategory.value = category.id;
     }
+
+    // ============================================================
+    // STATE CUSTOMER
+    // ============================================================
+    const customers = ref([]);
+    const customerLoading = ref(false);
+    const customerError = ref(null);
 
     // ============================================================
     // ITEM VARIANTS
@@ -409,6 +418,27 @@
         }
     }
 
+    // mengambil data customer
+    async function fetchCustomers() {
+        customerLoading.value = true;
+        customerError.value = null;
+
+        try {
+            const response = await getCustomers({
+                page: 1,
+                limit: 100,
+            });
+
+            customers.value = response.data.data ?? [];
+            console.log("CUSTOMERS:",customers.value);
+        } catch(error) {
+            console.error("Failed to load customers",error);
+            customerError.value = "Failed to load customers";
+        } finally {
+            customerLoading.value = false;
+        }
+    }
+
     // handler search
     function handleSearch(keyword) {
         searchKeyword.value = keyword;
@@ -485,9 +515,11 @@
     // FUNCTION UNTUK CREATE NEW SALE
     async function submitSale(paymentData) {
         const payload = {
-            customer_name: paymentData.customer_name || "",
+            // customer_name: paymentData.customer_name || "",
+            customer_id: paymentData.customer_id || null,
             discount_amount: discount.value,
             payment_method: paymentData.payment_method,
+            payment_status : paymentData.payment_status,
             amount_received: paymentData.amount_received,
             notes: paymentData.notes || "",
 
@@ -504,9 +536,9 @@
             const response = await createSale(payload);
 
             // DEBUG
-            // console.log("CREATE SALE RESPONSE:", response);
-            // console.log("API DATA:",response.data);
-            // console.log("SALES DATA:",response.data.data);
+            console.log("CREATE SALE RESPONSE:", response);
+            console.log("API DATA:",response.data);
+            console.log("SALES DATA:",response.data.data);
 
             // masukkan data response.data.data yang berhasil disimpan ke completed sale
             completedSale.value = response.data.data;
@@ -522,8 +554,16 @@
 
             // tampilkan success feedback
             transactionSuccessVisible.value = true;
+
+            // refresh data item variants untuk reload stock
+            await fetchItemVariants();
         } catch (error) {
             console.error("Failed to submit sale", error);
+
+            console.error(
+                "BACKEND ERROR:",
+                error.response?.data
+            );
         }
     }
 
@@ -534,6 +574,7 @@
     onMounted(() => {
         fetchCatalogItems();
         fetchItemVariants();
+        fetchCustomers();
     });
 </script>
 
@@ -630,6 +671,8 @@
     <POSPaymentDialog
         v-model:visible="paymentDialogVisible"
         :grand-total="grandTotal"
+        :customers="customers"
+        :customer-loading="customerLoading"
         @complete="submitSale"
     />
 
