@@ -42,8 +42,14 @@ export const menuItems = [
             {
                 key: "users",
                 label: "Users",
-                icon: "pi pi-user",
+                icon: "pi pi-users",
                 route: "/users",
+            },
+            {
+                key: "roles",
+                label: "Roles",
+                icon: "pi pi-shield",
+                route: "/roles",
             },
         ],
     },
@@ -82,9 +88,10 @@ export const menuItems = [
         icon: "pi pi-chart-bar",
         items: [
             {
-                key: "sales-report",
+                key: "sales_report",
                 label: "Sales Report",
                 route: "/reports/sales",
+                icon: "pi pi-dollar",
             },
             {
                 key: "purchase-report",

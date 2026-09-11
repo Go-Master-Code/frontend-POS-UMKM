@@ -1,5 +1,6 @@
 <script setup>
     import {computed} from "vue"
+    import Textarea from "primevue/textarea";
 
     // ============================================================
     // PROPS
@@ -30,6 +31,11 @@
             type: Number,
             default: 0,
         },
+
+        notes: {
+            type: String,
+            default: "",
+        },
     });
 
     // ============================================================
@@ -40,6 +46,7 @@
         "decrease",
         "remove",
         "update-discount",
+        "update:notes", // "update:notes" ← event khusus untuk v-model:notes
         "payment",
     ]);
 
@@ -59,6 +66,16 @@
 
         set(value) {
             emit("update-discount", value);
+        },
+    });
+
+    const notes = computed({
+        get() {
+            return props.notes;
+        },
+
+        set(value) {
+            emit("update:notes", value);
         },
     });
 
@@ -99,6 +116,14 @@
         // Kirim nilai valid ke parent.
         emit("update-discount", value);
     }
+
+    // WATCHER
+    // watch(
+    //     () => props.notes,
+    //     (value) => {
+    //         console.log("POSCart NOTES:", value);
+    //     }
+    // );
 </script>
 
 <template>
@@ -106,7 +131,7 @@
         <!--Header-->
         <div class="cart-header">
             <div>
-                <h2>Current Sale</h2>
+                <h2><i class="pi pi-shopping-cart"></i> Current Sale</h2>
                 <span class="cart-count">
                     {{ items.length }} item
                     <span v-if="items.length !==1">s</span>
@@ -185,6 +210,27 @@
             </div>
         </div>
 
+        <!--Transaction Notes-->
+        <div class="cart-notes">
+            <label for="sale-notes">
+                Notes
+            </label>
+
+            <Textarea
+                id="sale-notes"
+                v-model="notes"
+                rows="1"
+                maxlength="500"
+                :disabled="items.length === 0"
+                placeholder="Add a note..."
+                class="notes-input"
+            />
+
+            <small class="notes-counter">
+                {{ notes.length }}/500
+            </small>
+        </div>
+
         <!--Summary-->
         <div class="cart-summary">
             <div class="summary-row">
@@ -247,6 +293,8 @@
 
 .cart {
     height: 100%;
+    min-height: 0;
+    
     display: flex;
     flex-direction: column;
 
@@ -260,9 +308,11 @@
 /* Header */
 
 .cart-header {
-    padding: 16px;
+    padding: 12px 16px;
 
     border-bottom: 1px solid #e5e7eb;
+
+    flex-shrink: 0;
 }
 
 .cart-header h2 {
@@ -287,14 +337,15 @@
 
 .cart-items {
     flex: 1;
+    min-height: 0;
 
     overflow-y: auto;
 
-    padding: 8px 12px;
+    padding: 4px 12px;
 }
 
 .cart-item {
-    padding: 12px 4px;
+    padding: 9px 4px;
 
     border-bottom: 1px solid #f1f5f9;
 }
@@ -337,7 +388,7 @@
 
     gap: 10px;
 
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 /* Quantity */
@@ -354,8 +405,8 @@
 }
 
 .quantity-control button {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
 
     display: flex;
     align-items: center;
@@ -374,7 +425,7 @@
 }
 
 .quantity-control span {
-    min-width: 30px;
+    min-width: 28px;
 
     text-align: center;
 
@@ -472,7 +523,7 @@
 .payment-button {
     width: 100%;
 
-    height: 42px;
+    height: 38px;
 
     display: flex;
 
@@ -501,6 +552,37 @@
     opacity: 0.5;
 
     cursor: not-allowed;
+}
+
+/*CSS for notes*/
+.cart-notes {
+    padding: 7px 16px 6px;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+
+    flex-shrink: 0;
+}
+
+.cart-notes label {
+    display: block;
+
+    margin-bottom: 3px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.notes-input {
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+.notes-counter {
+    display: block;
+    margin-top: 2px;
+    text-align: right;
+    font-size: 0.65rem;
+    color: var(--text-color-secondary);
 }
 
 </style>

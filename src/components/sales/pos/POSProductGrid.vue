@@ -76,9 +76,9 @@
             :key="product.id"
             class="product-card"
         >
-            <div class="product-icon">
+            <!-- <div class="product-icon">
                 <i class="pi pi-box"></i>
-            </div>
+            </div> -->
 
             <div class="product-info">
                 <div class="product-name">
@@ -105,7 +105,7 @@
                         'stock-low': product.current_stock <= 5
                     }"
                 >
-                    Stock {{ product.current_stock }}
+                    Stock: {{ product.current_stock }}
                 </span>
             </div>
 
@@ -240,6 +240,7 @@
 
 .product-variant {
     font-size: 13px;
+    font-weight: 600;
     margin-top: 2px;
 
     color: #17991e;
@@ -286,6 +287,7 @@
 
 .product-stock {
     font-size: 12px;
+    font-weight: 600;
 
     color: #6b7280;
 

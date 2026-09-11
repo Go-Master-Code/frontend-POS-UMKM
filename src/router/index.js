@@ -15,9 +15,11 @@ import CatalogItemListView from '@/views/catalog_item/CatalogItemListView.vue'
 import ItemVariantListView from '@/views/item_variant/ItemVariantListView.vue'
 import CustomerListView from '@/views/customer/CustomerListView.vue'
 import UnpaidSalesView from '@/views/sales/UnpaidSalesView.vue'
+import SalesReportView from '@/views/reports/SalesReportView.vue'
 
 // import untuk kasir POS
 import SalesPOSView from '@/views/sales/SalesPOSView.vue'
+import RoleListView from '@/views/roles/RoleListView.vue'
 
 // membuat instance vue router
 const router = createRouter({
@@ -58,6 +60,13 @@ const router = createRouter({
                     component: UserListView,
                     meta: {
                         title: "Users",
+                    },
+                },
+                {
+                    path: "roles",
+                    component: RoleListView,
+                    meta: {
+                        title: "Roles",
                     },
                 },
                 { // ✅ Business Profile berada di dalam MainLayout
@@ -115,6 +124,15 @@ const router = createRouter({
                     meta: {
                         requiresAuth: true,
                         title: "Customers",
+                    },
+                },
+                {
+                    path: "/reports/sales", // berkaitan dengan file config/menu.js, path harus persis sama
+                    name: "sales_report",
+                    component: SalesReportView,
+                    meta: {
+                        requiresAuth: true,
+                        title: "Sales Report",
                     },
                 }
             ]

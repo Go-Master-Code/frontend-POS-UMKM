@@ -72,6 +72,7 @@
             >
                 No sales yet.
             </div>
+            
             <template v-else>
             <!-- Product List -->
                 <div

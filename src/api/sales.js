@@ -21,3 +21,11 @@ export function getUnpaidSales(params = {}) {
         },
     });
 }
+
+/**
+ * POST /sales/:id/pay
+ * Mengupdate status transaksi jadi PAID beserta dengan amouunt paid
+ */
+export function paySale(saleID, payload) {
+    return api.post(`/sales/${saleID}/pay`, payload);
+}

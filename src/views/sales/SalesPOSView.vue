@@ -231,6 +231,9 @@
     // Discount transaksi dalam nominal Rupiah. // Nanti bisa dikembangkan menjadi percentage atau promo.
     const discountAmount = ref(0);
 
+    // Notes yang ada di component cart (POSCart.vue)
+    const notes = ref("");
+
     // payment dialog
     const paymentDialogVisible = ref(false);
     const paymentLoading = ref(false);
@@ -238,7 +241,8 @@
     // Untuk sementara tax kita gunakan 10%.
     // IMPORTANT:
     // Nilai ini sebaiknya nanti berasal dari tenant/settings
-    const TAX_RATE = 0.10;
+    // const TAX_RATE = 0.10;
+    const TAX_RATE = 0;
 
     // ============================================================
     // CART CALCULATION
@@ -363,7 +367,7 @@
         if (cartItems.value.length === 0) {
             return;
         }
-
+        console.log("NOTES BEFORE PAYMENT:", notes.value);
         paymentDialogVisible.value=true;
     }
 
@@ -552,6 +556,9 @@
             // reset discount
             discountAmount.value = 0;
 
+            // reset notes
+            notes.value = "";
+
             // tampilkan success feedback
             transactionSuccessVisible.value = true;
 
@@ -645,9 +652,11 @@
                  ========================================== -->
             <aside class="pos-cart">
                 <POSCart
+                    v-model:notes="notes"
                     :items="cartItems"
                     :subtotal="subtotal"
                     :discount="discount"
+                    :notes="notes"
                     :tax="tax"
                     :grand-total="grandTotal"
                     @increase="increaseQty"
@@ -673,6 +682,7 @@
         :grand-total="grandTotal"
         :customers="customers"
         :customer-loading="customerLoading"
+        :notes="notes"
         @complete="submitSale"
     />
 

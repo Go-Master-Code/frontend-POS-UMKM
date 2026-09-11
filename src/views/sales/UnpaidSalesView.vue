@@ -1,7 +1,7 @@
 <script setup>
     import { onMounted, ref, watch } from 'vue';
     // import method api untuk menampilkan unpaid sales
-    import { getUnpaidSales } from '@/api/sales';
+    import { getUnpaidSales, paySale } from '@/api/sales';
 
     // components
     import Button from 'primevue/button';
@@ -12,7 +12,7 @@
 
     // import table dan dialog
     import UnpaidSalesTable from './components/UnpaidSalesTable.vue';
-
+    import UnpaidSalesPaymentDialog from './components/UnpaidSalesPaymentDialog.vue';
     // ============================================================================
     // STATE
     // ============================================================================
@@ -22,6 +22,12 @@
     const error = ref(null);
 
     const searchKeyword = ref("");
+
+    // const untuk payment dialog
+    const paymentDialogVisible = ref(false);
+    const selectedSale = ref(null);
+    const paying = ref(false);
+    const paymentBackendError = ref("");
 
     // pagination
     const page = ref(1);
@@ -131,10 +137,55 @@
     function handlePay(sale) {
         console.log("PAY UNPAID SALE:", sale);
 
-        // TODO:
-        // buka dialog pembayaran
+        selectedSale.value = sale;
+        paymentBackendError.value = "";
+        paymentDialogVisible.value = true;
     }
 
+    // function untuk submit pembayaran
+    async function submitPayment(paymentData) {
+        if (!selectedSale.value) {
+            return;
+        }
+
+        paying.value = true;
+        paymentBackendError.value = "";
+
+        try {
+            console.log("PAY SALE: ", {
+                sale_id: selectedSale.value.id,
+                payload: paymentData,
+            });
+
+            const response = await paySale(
+                selectedSale.value.id,
+                paymentData
+            );
+
+            console.log("PAY SALE RESPONSE: ",response);
+
+            paymentDialogVisible.value = false;
+            selectedSale.value = null;
+
+            await fetchUnpaidSales();
+
+            toast.add({
+                severity: "success",
+                summary: "Payment Successful",
+                detail: "Transaction has been paid successfully.",
+                life: 3000,
+            });
+        } catch (err) {
+            console.error("FAILED TO PAY SALE:", err);
+
+            paymentBackendError.value =
+                err.response?.data?.error ??
+                err.response?.data?.message ??
+                "Failed to process payment.";
+        } finally {
+            paying.value = false;
+        }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -196,6 +247,16 @@
             @page="handlePage"
             @sort="handleSort"
             @pay="handlePay"
+        />
+
+        <!--Komponen Dialog saat tombol pay di klik-->
+        <UnpaidSalesPaymentDialog
+            v-model:visible="paymentDialogVisible"
+            :sale="selectedSale"
+            :loading="paying"
+            :backend-error="paymentBackendError"
+            @pay="submitPayment"
+            @clear-error="paymentBackendError = ''"
         />
     </div>
 </template>

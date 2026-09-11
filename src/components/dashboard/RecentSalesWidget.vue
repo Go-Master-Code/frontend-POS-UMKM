@@ -27,7 +27,6 @@
             <!-- ==========================================
                     Loading Skeleton
             =========================================== -->
-
             <template v-if="loading">
 
                 <div
@@ -83,7 +82,7 @@
                         <i class="pi pi-file mr-2"></i>{{ sale.invoice_number }}
                     </div>
                     <div class="customer">
-                        👤 {{ sale.customer_name }}
+                        👤 {{ sale.customer_name || "Walk-In Customer" }}
                     </div>
                     <div class="cashier">
                         🧑 {{ sale.cashier_name }}

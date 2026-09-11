@@ -252,7 +252,7 @@
             // DEVELOPMENT ONLY
             //await new Promise(resolve => setTimeout(resolve, 2000));
             
-            topSellingProducts.value = response.data.data;
+            topSellingProducts.value = response.data.data ?? [];;
         } catch(err) {
             console.error("Failed to load top selling products", err);
         } finally {
@@ -298,7 +298,7 @@
             // DEVELOPMENT ONLY
             //await new Promise(resolve => setTimeout(resolve, 2000));
             
-            recentSales.value = response.data.data;
+            recentSales.value = response.data.data ?? []; // wajib pakai ?? [] agar ketika data null tidak terjadi error console
         } catch(err) {
             console.error("Failed to load recent sales", err);
         } finally {

@@ -9,8 +9,8 @@
     |--------------------------------------------------------------------------
     */
     defineProps({
-        // data sales
-        sales: {
+        // data roles
+        roles: {
             type: Array,
             default: () => [],
         },
@@ -55,63 +55,33 @@
     const emit = defineEmits([
         "page",
         "sort",
-        "pay",
+        "edit",
+        "delete",
     ]);
 
     /**
      * Meneruskan event sort ke parent.
      */
     function handleSort(event) {
-        console.log("TABLE SORT EVENT:", event);
-
         emit("sort", event);
     }
 
+    // meneruskan event page ke parent
     function handlePage(event) {
         emit("page", event);
-    }
-
-    /**
-     * Meneruskan transaksi yang akan dibayar ke parent.
-     */
-    function handlePay(sale) {
-        emit ("pay", sale);
-    }
-
-    // ============================================================
-    // FORMAT CURRENCY
-    // ============================================================
-    function formatCurrency(value) {
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-        }).format(value ?? 0);
-    }
-
-    // ============================================================
-    // FORMAT TANGGAL TRANSAKSI
-    // ============================================================
-    function formatDate(value) {
-        if (!value) return "-";
-
-        return new Intl.DateTimeFormat("id-ID", {
-            dateStyle: "medium",
-            timeStyle: "short",
-        }).format(new Date(value));
     }
 </script>
 
 <template>
     <DataTable
-        :value="sales"
+        :value="roles"
         :loading="loading"
         size="small"
         lazy
 
         :sortField="sortField"
         :sortOrder="sortOrder"
-
+        
         :rows="rows"
         :first="(page - 1) * rows"
         :totalRecords="totalRecords"
@@ -132,83 +102,33 @@
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
     >
 
-        <!-- Invoice -->
+        <!-- Role Name -->
         <Column
-            field="invoice_number"
-            header="Invoice"
+            field="name"
+            header="Name"
             sortable
         />
-
-        <!-- Customer -->
-        <Column
-            field="customer_name"
-            header="Customer"
-            sortable
-        />
-
-        <!--Cashier-->
-        <Column
-            field="cashier_name"
-            header="Cashier"
-            sortable
-        />
-
-        <!--Grand total-->
-        <Column
-            field="grand_total"
-            header="Total"
-            sortable
-        >
-            <template #body="{ data }">
-                {{ formatCurrency(data.grand_total) }}
-            </template>
-        </Column>
-
-        <!-- Payment Method -->
-        <Column
-            field="payment_method"
-            header="Method"
-        />
-
-        <!--Payment Status-->
-        <Column
-            field="payment_status"
-            header="Status"
-        >
-            <template #body="{data}">
-                <span class="status unpaid">
-                    {{ data.payment_status }}
-                </span>
-            </template>
-        </Column>
-
-        <!--Created At-->
-        <Column
-            field="created_at"
-            header="Date"
-            sortable
-        >
-            <template #body="{data}">
-                {{ formatDate(data.created_at) }}
-            </template>
-        </Column>   
 
         <!-- Action -->
         <Column
             header="Action"
-            style="width: 60px"
+            style="width: 140px"
         >
             <template #body="{ data }">
-                <div class="action-buttons">
-                    <Button
-                        icon="pi pi-money-bill"
-                        text
-                        label="Pay"
-                        rounded
-                        severity="succes"
-                        @click="handlePay(data)"
-                    />
-                </div>
+                <Button
+                    icon="pi pi-pencil"
+                    text
+                    rounded
+                    severity="warning"
+                    @click="$emit('edit',data)"
+                />
+                <Button
+                    icon="pi pi-trash"
+                    text
+                    rounded
+                    severity="danger"
+                    @click="$emit('delete',data)"
+                />
             </template>
         </Column>
 
@@ -217,10 +137,10 @@
             <div class="empty-state">
                 <i class="pi pi-search empty-icon"></i>
                 <div class="empty-title">
-                    No unpaid transactions
+                    No Roles found
                 </div>
                 <div class="empty-description">
-                    There are currently no unpaid transactions.
+                    Try changing your search keyword.
                 </div>
             </div>
         </template>
@@ -228,13 +148,31 @@
 </template>
 
 <style scoped>
+.status-badge{
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.status-active{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-inactive{
+    background:#fee2e2;
+    color:#991b1b;
+}
 
 .empty-state{
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+
     padding:48px 16px;
+
     color:#6b7280;
 }
 
@@ -255,25 +193,4 @@
     font-size:14px;
 }
 
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-}
-
-.status {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.status.unpaid {
-    background: #fff7ed;
-    color: #c2410c;
-}
 </style>

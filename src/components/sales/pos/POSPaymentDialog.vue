@@ -29,8 +29,13 @@
         customerLoading: {
             type: Boolean,
             default: false,
-        }
-    })
+        },
+
+        notes: {
+            type: String,
+            default: "",
+        },
+    });
 
     // ============================================================
     // EVENTS
@@ -190,6 +195,7 @@
                 
             payment_method: paymentMethod.value,
             payment_status: paymentStatus.value,
+            notes: props.notes, // dikirim dari parent, bukan merupakan komponen lokal POSPaymentDialog
 
             amount_received:
                 paymentMethod.value === "CASH" &&
