@@ -23,6 +23,12 @@ import AppMenuItem from "./AppMenuItem.vue";
 .app-menu {
     display: flex;
     flex-direction: column;
+
+    flex: 1;
+    min-height: 0;
+
     padding: 12px 0;
+
+    overflow-y: auto;
 }
 </style>

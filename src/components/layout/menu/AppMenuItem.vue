@@ -2,6 +2,10 @@
 import { computed, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
+// import API dan utility download untuk stock report
+import { generateStockReportPDF } from "@/api/reports";
+import { downloadPdf } from "@/utils/download";
+
 defineOptions({
     name: "AppMenuItem",
 });
@@ -67,7 +71,30 @@ const isActive = computed(() => route.path === props.item.route);
 | Klik menu
 |--------------------------------------------------------------------------
 */
-function handleClick() {
+async function handleClick() {
+    // klik stock report
+    if (props.item.action === "download-stock-report") {
+        try {
+            const response = await generateStockReportPDF();
+
+            const timestamp = new Date()
+                .toISOString()
+                .slice(0, 16)
+                .replace(/[-:T]/g, "");
+
+            downloadPdf(
+                response,
+                `stock-report-${timestamp}.pdf`
+            );
+        } catch (error) {
+            console.error(
+                "Failed to download stock report:",
+                error
+            );
+        }
+
+        return;
+    }
 
     // Parent menu
     if (props.item.items) {

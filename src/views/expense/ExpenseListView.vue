@@ -169,6 +169,7 @@
                 optionValue="value"
                 placeholder="Payment Method"
                 showClear
+                class="payment-method-select"
                 @change="loadExpenses"
             />
 
@@ -224,37 +225,47 @@
 </template>
 
 <style scoped>
-    .page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 24px;
-    }
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
 
-    .page-header h2 {
-        margin: 0;
-    }
+.page-header h2 {
+    margin: 0;
+}
 
-    .page-description {
-        margin: 4px 0 0;
-        color: var(--p-text-muted-color);
-    }
+.page-description {
+    margin: 4px 0 0;
+    color: var(--p-text-muted-color);
+}
 
-    .filter-section {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-    }
+.filter-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
 
-    .filter-section .p-icon-field {
-        width: 280px;
-    }
+.filter-section .p-icon-field {
+    width: 280px;
+}
 
-    .loading-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 300px;
-    }
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.payment-method-select {
+    height: 36px;
+}
+
+.payment-method-select :deep(.p-select-label) {
+    height: 36px;
+    display: flex;
+    align-items: center;
+}
 </style>

@@ -56,52 +56,54 @@
 </template>
 
 <style scoped>
-.sidebar{
-    width:260px;
-    height:100vh;
+.sidebar {
+    width: 260px;
+    height: 100vh;
 
-    display:flex;
-    flex-direction:column;
+    display: flex;
+    flex-direction: column;
 
-    background:#fff;
+    background: #fff;
 
-    border-right:1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
 
-    transition:width .25s ease;
+    transition: width 0.25s ease;
 
-    overflow:hidden;
+    overflow: hidden;
 }
-.sidebar-header{
+.sidebar-header {
     padding: 20px;
     border-bottom: 1px solid #e5e7eb;
 }
-.app-name{
+.app-name {
     font-size: 22px;
     font-weight: 700;
     color: #2563eb;
 }
-.tenant-name{
+
+.tenant-name {
     margin-top: 4px;
     color: #6b7280;
     font-size: 14px;
 }
+
 .logo {
     padding: 20px;
-
     font-size: 22px;
     font-weight: bold;
-
     text-align: center;
     border-bottom: 1px solid #ddd;
 }
-.user-card{
+
+.user-card {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
     border-bottom: 1px solid #e5e7eb;
 }
-.avatar{
+
+.avatar {
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -112,11 +114,19 @@
     justify-content: center;
     font-size: 18px;
 }
-.user-name{
+
+.user-name {
     font-weight: 600;
 }
-.user-role{
+
+.user-role {
     font-size: 13px;
     color: #6b7280;
+}
+
+/* Area menu yang dapat di-scroll */
+.sidebar > :deep(.app-menu) {
+    flex: 1;
+    min-height: 0;
 }
 </style>

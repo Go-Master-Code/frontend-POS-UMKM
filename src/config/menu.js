@@ -53,6 +53,7 @@ export const menuItems = [
             },
         ],
     },
+    /* MENU PURCHASE SEMENTARA DI NONAKTIFKAN
     {
         key: "purchase",
         label: "Purchase",
@@ -69,7 +70,7 @@ export const menuItems = [
                 route: "/purchase-return",
             },
         ],
-    },
+    },*/
     {
         key: "expenses",
         label: "Expenses",
@@ -85,7 +86,7 @@ export const menuItems = [
     {
         key: "unpaid_sales",
         label: "Unpaid Sales",
-        icon: "pi pi-wallet",
+        icon: "pi pi-exclamation-circle",
         route: "/unpaid_sales",
     },
     {
@@ -97,17 +98,26 @@ export const menuItems = [
                 key: "sales_report",
                 label: "Sales Report",
                 route: "/reports/sales",
-                icon: "pi pi-dollar",
+                icon: "pi pi-wallet",
             },
+            /* REPORT SALES SEMENTARA DI NONAKTIFKAN
             {
                 key: "purchase-report",
                 label: "Purchase Report",
                 route: "/reports/purchase",
             },
+            */
+            {
+                key: "expense-report",
+                label: "Expense Report",
+                route: "/reports/expenses",
+                icon: "pi pi-money-bill",
+            },
             {
                 key: "stock-report",
                 label: "Stock Report",
-                route: "/reports/stock",
+                icon: "pi pi-box",
+                action: "download-stock-report", // jangan pakai route, tapi pakai action karena mau langsung generate pdf
             },
         ],
     },
