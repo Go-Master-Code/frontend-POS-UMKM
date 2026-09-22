@@ -1,27 +1,11 @@
 import api from "./index"
 
-/**
- * POST /expenses
- * Menambah master expense - detil expense
- */
-export function createExpense(payload) {
-    return api.post("/expenses", payload);
-}
-
 /*
-    GET /expenses
-    menampilkan semua data expenses
+    GET /expense-categories
+    menampilkan semua data expense categories
 */
-export function getAllExpenses(params = {}) {
-    return api.get("/expenses", {
+export function getAllExpenseCategories(params = {}) {
+    return api.get("/expense-categories", {
         params,
     });
-}
-
-/*
-    GET /expenses/id
-    Mengambil detail expenses berdasarkan ID
-*/
-export function getExpenseByID(expenseID) {
-    return api.get(`/expenses/${expenseID}`);
 }

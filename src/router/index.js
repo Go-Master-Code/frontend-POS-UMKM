@@ -16,6 +16,7 @@ import ItemVariantListView from '@/views/item_variant/ItemVariantListView.vue'
 import CustomerListView from '@/views/customer/CustomerListView.vue'
 import UnpaidSalesView from '@/views/sales/UnpaidSalesView.vue'
 import SalesReportView from '@/views/reports/SalesReportView.vue'
+import ExpenseListView from '@/views/expense/ExpenseListView.vue'
 
 // import untuk kasir POS
 import SalesPOSView from '@/views/sales/SalesPOSView.vue'
@@ -88,6 +89,15 @@ const router = createRouter({
                     component: CatalogItemListView,
                     meta: {
                         title: "Catalog Item",
+                    },
+                },
+                {
+                    path: "/expenses", // berkaitan dengan file config/menu.js, path harus persis sama
+                    name: "expenses",
+                    component: ExpenseListView,
+                    meta: {
+                        requiresAuth: true,
+                        title: "Expenses",
                     },
                 },
                 {
