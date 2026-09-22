@@ -1,15 +1,15 @@
 <script setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useToast } from 'primevue/usetoast';
+
+    // debounce search
+    import { useDebounceFn } from '@vueuse/core';
 
     // import komponen primevue
     import Button from 'primevue/button';
-    import IconField from 'primevue/iconfield';
-    import InputIcon from 'primevue/inputicon';
     import InputText from 'primevue/inputtext';
     import Message from 'primevue/message';
     import Paginator from 'primevue/paginator';
-    import ProgressSpinner from 'primevue/progressspinner';
     import Select from 'primevue/select';
 
     // import component table dan expense dialog
@@ -48,7 +48,7 @@
     const paymentMethodOptions = [
         { label: "Cash", value: "CASH" },
         { label: "QRIS", value: "QRIS" },
-        { label: "Transfer", value: "Transfer" },
+        { label: "Transfer", value: "TRANSFER" },
     ];
 
     // ========================================
@@ -85,6 +85,22 @@
         } finally {
             loading.value = false;
         }
+    }
+
+    // debounce digunakan agar ada transisi ketika search data
+    const debouncedSearch = useDebounceFn(() => {
+        page.value = 1;
+        loadExpenses();
+    }, 400);
+
+    watch(search, () => {
+        debouncedSearch();
+    });
+
+    // CLEAR SEARCH SAAT TOMBOL X diklik
+    function clearSearch() {
+        page.value = 1;
+        search.value = "";
     }
 
     // ========================================
@@ -152,15 +168,25 @@
 
         <!--Filter-->
         <div class="filter-section">
-            <IconField>
-                <InputIcon class="pi pi-search" />
+            <div class="expense-search">
+                <i class="pi pi-search search-icon" />
 
                 <InputText
                     v-model="search"
-                    placeholder="Search expense..."
-                    @keyup.enter="loadExpenses"
+                    placeholder="Search expense no. or amount..."
+                    class="search-input"
                 />
-            </IconField>
+
+                <Button
+                    v-if="search"
+                    icon="pi pi-times"
+                    text
+                    rounded
+                    severity="secondary"
+                    class="clear-btn"
+                    @click="clearSearch"
+                />
+            </div>
 
             <Select
                 v-model="paymentMethod"
@@ -173,38 +199,30 @@
                 @change="loadExpenses"
             />
 
+            <!-- BUTTON SEARCH INI SEBENARNYA TIDAK DIPERLUKAN LAGI
             <Button
                 label="Search"
                 icon="pi pi-search"
                 severity="primary"
                 @click="loadExpenses"
-            />
+                class="search-button"
+            /> -->
         </div>
 
-        <!--Loading-->
-        <div
-            v-if="loading"
-            class="loading-container"
-        >
-            <ProgressSpinner />
-        </div>
-
-        <!--Error-->
         <Message
-            v-else-if="errorMessage"
+            v-if="errorMessage"
             severity="error"
             :closable="false"
         >
             {{ errorMessage }}
         </Message>
 
-        <!--Expense Table-->
         <template v-else>
             <ExpenseTable
                 :expenses="expenses"
+                :loading="loading"
             />
 
-            <!-- Pagination -->
             <Paginator
                 v-if="totalRecords > 0"
                 :rows="limit"
@@ -248,15 +266,32 @@
     margin-bottom: 20px;
 }
 
-.filter-section .p-icon-field {
+.expense-search {
+    position: relative;
     width: 280px;
 }
 
-.loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
+.search-input {
+    width: 100%;
+    height: 36px;
+    padding-left: 36px;
+    padding-right: 36px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    z-index: 1;
+}
+
+.clear-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .payment-method-select {
@@ -268,4 +303,9 @@
     display: flex;
     align-items: center;
 }
+
+.search-button {
+    height: 36px;
+}
+
 </style>

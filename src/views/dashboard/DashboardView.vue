@@ -8,6 +8,10 @@
     import { getDailySalesChart } from "@/api/dashboard";
     import SalesChart from "@/components/dashboard/SalesChart.vue";
 
+    // import API dan component Expenses Chart
+    import { getDailyExpensesChart } from "@/api/dashboard";
+    import ExpenseChart from "@/components/dashboard/ExpenseChart.vue";
+
     // import API dan component Purchase Chart
     import { getDailyPurchaseChart } from "@/api/dashboard";
     import PurchaseChart from "@/components/dashboard/PurchaseChart.vue";
@@ -43,6 +47,7 @@
 
     const dashboard = ref({
         salesToday: 0,
+        expenseToday: 0,
         purchaseToday: 0,
         profitToday: 0,
         totalProducts: 0,
@@ -58,6 +63,7 @@
 
     const loadingSummary = ref(false);
     const loadingSalesChart = ref(false);
+    const loadingExpensesChart = ref(false);
     const loadingPurchaseChart = ref(false);
     const loadingTopSelling = ref(false);
     const loadingLowStock = ref(false);
@@ -78,6 +84,10 @@
         sales: {
             bg: "#DCFCE7",
             color: "#16A34A"
+        },
+        expenses: {
+            bg: "#FEE2E2",
+            color: "#DC2626"
         },
         purchase: {
             bg: "#DBEAFE",
@@ -108,6 +118,14 @@
     */
     const salesLabels = ref([]);
     const salesValues = ref([]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Expense Chart State
+    |--------------------------------------------------------------------------
+    */
+    const expenseLabels = ref([]);
+    const expenseValues = ref([]);
 
     /*
     |--------------------------------------------------------------------------
@@ -159,6 +177,7 @@
 
             dashboard.value = {
                 salesToday: data.today_sales,
+                expenseToday: data.today_expenses,
                 purchaseToday: data.today_purchase,
                 totalProducts: data.total_items,
                 totalVariants: data.total_variants,
@@ -201,6 +220,38 @@
             console.error(err);
         } finally {
             loadingSalesChart.value=false;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Expense Chart
+    |--------------------------------------------------------------------------
+    | Mengambil data chart dari backend.
+    |--------------------------------------------------------------------------
+    */
+    async function loadExpensesChart() {
+        loadingExpensesChart.value = true;
+
+        try {
+            const response = await getDailyExpensesChart();
+            // DEVELOPMENT ONLY
+            // await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Pastikan rows selalu berupa array
+            const rows = Array.isArray(response.data.data)
+                ? response.data.data
+                : []; // jika null, definisikan sebagai empty array
+
+            /*Label X Axis*/
+            expenseLabels.value = rows.map(item => formatShortDate(item.date));
+
+            /*Nilai Y Axis*/
+            expenseValues.value = rows.map(item => item.total_expenses);
+        } catch(err) {
+            console.error(err);
+        } finally {
+            loadingExpensesChart.value=false;
         }
     }
 
@@ -320,6 +371,7 @@
             await Promise.all([
                 loadSummary(),
                 loadSalesChart(),
+                loadExpensesChart(),
                 loadPurchaseChart(),
                 loadTopSellingProducts(),
                 loadLowStockItems(),
@@ -347,6 +399,7 @@
             loadingPurchaseChart.value = false;
             loadingRecentSales.value = false;
             loadingSalesChart.value = false;
+            loadingExpensesChart.value = false;
             loadingSummary.value = false;
             loadingTopSelling.value = false;
         }
@@ -390,6 +443,16 @@
                 :iconBg="cardColors.sales.bg"
                 :iconColor="cardColors.sales.color"
             />
+            <!-- Expenses Today -->
+            <DashboardCard
+                title="Expenses Today"
+                :loading="loadingSummary"
+                :value="dashboard.expenseToday"
+                format="currency"
+                icon="pi pi-money-bill"
+                :iconBg="cardColors.expenses.bg"
+                :iconColor="cardColors.expenses.color"
+            />
             <!-- Purchase Today -->
             <DashboardCard
                 title="Purchase Today"
@@ -400,7 +463,9 @@
                 :iconBg="cardColors.purchase.bg"
                 :iconColor="cardColors.purchase.color"
             />
+
             <!-- Profit Today -->
+            <!-- SEMENTARA PROFIT CARD DI HIDE DULU
             <DashboardCard
                 title="Profit Today"
                 :loading="loadingSummary"
@@ -410,6 +475,8 @@
                 :iconBg="cardColors.profit.bg"
                 :iconColor="cardColors.profit.color"
             />
+            -->
+
             <!-- Total Product -->
             <DashboardCard
                 title="Total Product"
@@ -450,12 +517,21 @@
                 :values="salesValues"
                 :loading="loadingSalesChart"
             />
-           
+
+            <!-- Expenses Chart -->
+            <ExpenseChart
+                :labels="expenseLabels"
+                :values="expenseValues"
+                :loading="loadingExpensesChart"
+            />
+            
+            <!-- SEMENTARA PURCHASE CHART DI HIDE DULU
             <PurchaseChart
                 :labels="purchaseLabels"
                 :values="purchaseValues"
                 :loading="loadingPurchaseChart"
             />
+            -->
         </div>
 
         <!-- Top Selling Products Widget -->
