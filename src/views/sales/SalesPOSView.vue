@@ -27,6 +27,9 @@
     const catalogError = ref(null);
     const searchKeyword = ref("");
 
+    // untuk mobile
+    const cartVisible = ref(false);
+
     // transaction success
     const completedSale = ref(null);
     const transactionSuccessVisible = ref(false);
@@ -40,6 +43,15 @@
         message: "",
         // akan menggunakan success, error, warning
     })
+
+    // fungsi untuk mobile version
+    function openCart() {
+        cartVisible.value = true;
+    }
+
+    function closeCart() {
+        cartVisible.value = false;
+    }
 
     // fungsi suara untuk scan barcode
     function playBarcodeSound(type) {
@@ -295,6 +307,13 @@
         return taxableAmount.value + tax.value;
     });
 
+    // untuk tampilan mobile
+    const cartItemCount = computed(() => {
+        return cartItems.value.reduce((total, item) => {
+            return total + item.qty;
+        }, 0);
+    });
+
     // functions
     function addToCart(product) {
         console.log("=== ADD TO CART ===");
@@ -309,7 +328,7 @@
         // Jika produk sudah ada di cart
         if (existingItem) {
             // Jangan melebihi stock
-            if (existingItem.qty >= existingItem.stock) {
+            if (existingItem.qty >= existingItem.current_stock) {
                 return;
             }
 
@@ -331,7 +350,7 @@
 
     function increaseQty(item) {
         // tentukan batas maksimal sesuai stok yang tersedia
-        if (item.qty >= item.stock) {
+        if (item.qty >= item.current_stock) {
             return;
         }
 
@@ -553,6 +572,9 @@
             // kosongkan cart
             cartItems.value = []; // array kosong
 
+            // tutup mobile cart
+            cartVisible.value = false;
+
             // reset discount
             discountAmount.value = 0;
 
@@ -656,7 +678,6 @@
                     :items="cartItems"
                     :subtotal="subtotal"
                     :discount="discount"
-                    :notes="notes"
                     :tax="tax"
                     :grand-total="grandTotal"
                     @increase="increaseQty"
@@ -675,6 +696,75 @@
                 </div> -->
             </aside>
         </div>
+
+        <!-- MOBILE CART SUMMARY -->
+        <div
+            v-if="cartItems.length > 0"
+            class="mobile-cart-summary"
+            @click="openCart"
+        >
+            <div class="mobile-cart-info">
+                <div class="mobile-cart-count">
+                    <i class="pi pi-shopping-cart"></i>
+
+                    <span>
+                        {{ cartItemCount }} item
+                    </span>
+                </div>
+
+                <strong>
+                    Rp {{ new Intl.NumberFormat("id-ID").format(grandTotal) }}
+                </strong>
+            </div>
+
+            <button
+                type="button"
+                class="mobile-cart-button"
+                @click.stop="openCart"
+            >
+                Lihat Cart
+            </button>
+        </div>
+
+        <!-- MOBILE CART SHEET -->
+        <div
+            v-if="cartVisible"
+            class="mobile-cart-overlay"
+            @click.self="closeCart"
+        >
+            <div class="mobile-cart-sheet">
+
+                <div class="mobile-cart-sheet-header">
+                    <strong>Current Sale</strong>
+
+                    <button
+                        type="button"
+                        class="mobile-cart-close"
+                        aria-label="Close cart"
+                        @click="closeCart"
+                    >
+                        <i class="pi pi-times"></i>
+                    </button>
+                </div>
+
+                <div class="mobile-cart-content">
+                    <POSCart
+                        v-model:notes="notes"
+                        :items="cartItems"
+                        :subtotal="subtotal"
+                        :discount="discount"
+                        :tax="tax"
+                        :grand-total="grandTotal"
+                        @increase="increaseQty"
+                        @decrease="decreaseQty"
+                        @update-discount="updateDiscount"
+                        @payment="openPaymentDialog"
+                    />
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
     <POSPaymentDialog
@@ -695,6 +785,7 @@
 <style scoped>
 .pos-page {
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -771,6 +862,7 @@
     overflow-y: auto;
 
     padding: 16px;
+    padding-bottom: 90px;
 }
 
 
@@ -908,15 +1000,213 @@
 
 }
 
+/* ==========================================
+   MOBILE CART SUMMARY
+   ========================================== */
+
+.mobile-cart-summary {
+    display: none;
+}
+
+.mobile-cart-overlay {
+    display: none;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 1100px) {
+    .pos-layout {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+}
+
+
 @media (max-width: 900px) {
 
     .pos-layout {
         grid-template-columns: 1fr;
     }
 
+    /* Cart sidebar desktop disembunyikan */
     .pos-cart {
-        min-height: 320px;
+        display: none;
     }
 
+    /* ======================================
+       BOTTOM CART SUMMARY
+       ====================================== */
+
+    .mobile-cart-summary {
+        position: fixed;
+
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        z-index: 1000;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding: 10px 14px;
+
+        background: #ffffff;
+
+        border-top: 1px solid #e5e7eb;
+
+        box-shadow:
+            0 -3px 12px rgba(0, 0, 0, .08);
+    }
+
+    .mobile-cart-info {
+        min-width: 0;
+    }
+
+    .mobile-cart-count {
+        display: flex;
+        align-items: center;
+
+        gap: 6px;
+
+        font-size: 13px;
+        color: #374151;
+    }
+
+    .mobile-cart-count i {
+        color: #2563eb;
+    }
+
+    .mobile-cart-info strong {
+        display: block;
+
+        margin-top: 2px;
+
+        font-size: 16px;
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .mobile-cart-button {
+        flex-shrink: 0;
+
+        min-height: 42px;
+
+        padding: 0 18px;
+
+        border: 0;
+        border-radius: 7px;
+
+        background: #2563eb;
+        color: #ffffff;
+
+        font-size: 14px;
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+
+    /* ======================================
+       MOBILE CART OVERLAY
+       ====================================== */
+
+    .mobile-cart-overlay {
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 2000;
+
+        display: flex;
+        align-items: flex-end;
+
+        background: rgba(0, 0, 0, .35);
+    }
+
+
+    /* ======================================
+       MOBILE CART SHEET
+       ====================================== */
+
+    .mobile-cart-sheet {
+        width: 100%;
+
+        max-height: 90vh;
+
+        display: flex;
+        flex-direction: column;
+
+        background: #ffffff;
+
+        border-radius: 14px 14px 0 0;
+
+        overflow: hidden;
+    }
+
+
+    .mobile-cart-sheet-header {
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 14px 16px;
+
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+
+    .mobile-cart-sheet-header strong {
+        font-size: 16px;
+        color: #111827;
+    }
+
+
+    .mobile-cart-close {
+        width: 36px;
+        height: 36px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border: 0;
+        border-radius: 50%;
+
+        background: #f3f4f6;
+        color: #374151;
+
+        cursor: pointer;
+    }
+
+
+    .mobile-cart-content {
+        min-height: 0;
+
+        overflow-y: auto;
+    }
+
+
+    /*
+     * POSCart memiliki height: 100%.
+     * Pada mobile sheet kita tidak membutuhkan
+     * tinggi penuh viewport.
+     */
+    .mobile-cart-content :deep(.cart) {
+        height: auto;
+
+        min-height: 0;
+
+        border: 0;
+        border-radius: 0;
+    }
 }
 </style>

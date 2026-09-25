@@ -1,32 +1,6 @@
 <script setup>
     import Button from "primevue/button";
 
-    /*
-    * Daftar kategori sementara untuk kebutuhan UI.
-    *
-    * Nanti setelah layout dan filtering selesai,
-    * data kategori ini akan kita ambil dari API backend.
-    */
-
-    // const categories = [
-    //     {
-    //         id: "all",
-    //         name: "All",
-    //     },
-    //     {
-    //         id: "snack",
-    //         name: "Snack",
-    //     },
-    //     {
-    //         id: "minuman",
-    //         name: "Minuman",
-    //     },
-    //     {
-    //         id: "makanan",
-    //         name: "Makanan",
-    //     },
-    // ];
-
     // ============================================================================
     // PROPS
     // ============================================================================
@@ -94,7 +68,7 @@
 .category-filter {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 
     gap: 8px;
 
@@ -106,6 +80,12 @@
     overflow-x: auto;
 
     scrollbar-width: none;
+}
+
+.category-filter :deep(.p-button) {
+    min-height: 40px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .category-filter::-webkit-scrollbar {

@@ -152,16 +152,21 @@
 }
 
 @media (max-width: 800px) {
+    .product-sku {
+        display: none; /* SKU tidak perlu tampil di mobile*/
+    }
     .product-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
+/*
 @media (max-width: 500px) {
     .product-grid {
         grid-template-columns: 1fr;
     }
 }
+*/
 
 /* ==========================================
    PRODUCT CARD
@@ -251,7 +256,7 @@
 }
 
 .product-sku {
-    margin-top: 4%;
+    margin-top: 4px;
 
     font-size: 12px;
 

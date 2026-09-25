@@ -44,7 +44,6 @@
     const emit = defineEmits([
         "increase",
         "decrease",
-        "remove",
         "update-discount",
         "update:notes", // "update:notes" ← event khusus untuk v-model:notes
         "payment",
@@ -79,11 +78,12 @@
         },
     });
 
-    const subtotal = computed(() => {
-        return props.items.reduce((total, item) => {
-            return total + item.qty * item.selling_price;
-        }, 0);
-    });
+    // subtotal dihitung dari parent SalesPOSView.vue
+    // const subtotal = computed(() => {
+    //     return props.items.reduce((total, item) => {
+    //         return total + item.qty * item.selling_price;
+    //     }, 0);
+    // });
 
     // ============================================================
     // FORMAT CURRENCY
@@ -158,7 +158,7 @@
             <!--Items-->
             <div
                 v-for="item in items"
-                :key="item.item_variant_id"
+                :key="item.id"
                 class="cart-item"
             >
                 <div class="cart-item-info">
@@ -236,7 +236,7 @@
             <div class="summary-row">
                 <span>Subtotal</span>
                 <strong>
-                    {{ formatCurrency(subtotal) }}
+                    {{ formatCurrency(props.subtotal) }}
                 </strong>
             </div>
 
@@ -247,7 +247,7 @@
                     v-model.number="discountInput"
                     type="number"
                     min="0"
-                    :max="subtotal"
+                    :max="props.subtotal"
                     :disabled="items.length === 0"
                     class="discount-input"
                     @input="handleDiscountInput"
@@ -405,8 +405,8 @@
 }
 
 .quantity-control button {
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
 
     display: flex;
     align-items: center;
@@ -425,7 +425,7 @@
 }
 
 .quantity-control span {
-    min-width: 28px;
+    min-width: 36px;
 
     text-align: center;
 
