@@ -21,12 +21,18 @@ import Breadcrumb from "primevue/breadcrumb";
 // import untuk breadcrumb
 import { getCatalogItemByID } from "@/api/catalog_items";
 
+// import AppMenu untuk navigator menu di mobile mode
+import AppMenu from "./menu/AppMenu.vue";
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
 // toast notification
 const toast = useToast();
+
+// state untuk menu navigator mobile
+const mobileMenuVisible = ref(false);
 
 // change password dialog
 const passwordDialogVisible = ref(false);
@@ -103,6 +109,15 @@ const userMenuItems = ref([
 
 function toggleUserMenu(event) {
     menu.value.toggle(event);
+}
+
+// function toggle menu navigator mobile
+function toggleMobileMenu() {
+    mobileMenuVisible.value = !mobileMenuVisible.value;
+}
+
+function closeMobileMenu() {
+    mobileMenuVisible.value = false;
 }
 
 /*
@@ -211,12 +226,31 @@ watch(
         loadCatalogItemName();
     }
 );
+
+// watcher untuk mobile mode
+watch(
+    () => route.path,
+    () => {
+        closeMobileMenu(); // tutup menu ketika navigasi terjadi
+    }
+);
 </script>
 
 <template>
     <header class="topbar">
         <!-- Bagian kiri -->
         <div class="topbar-left">
+            <!-- Mobile menu button -->
+            <Button
+                class="mobile-menu-button"
+                icon="pi pi-bars"
+                severity="secondary"
+                text
+                rounded
+                aria-label="Open menu"
+                @click="toggleMobileMenu"
+            />
+
             <Breadcrumb
                 :model="breadcrumbItems"
             >
@@ -264,6 +298,40 @@ watch(
 
     </header>
 
+    <!-- Menu drawer untuk mobile version -->
+    <div
+        v-if="mobileMenuVisible"
+        class="mobile-menu-overlay"
+        @click.self="closeMobileMenu"
+    >
+        <aside class="mobile-menu-drawer">
+
+            <div class="mobile-menu-header">
+                <div>
+                    <div class="mobile-app-name">
+                        POS UMKM
+                    </div>
+
+                    <div class="mobile-tenant-name">
+                        {{ authStore.user?.tenant_name }}
+                    </div>
+                </div>
+
+                <Button
+                    icon="pi pi-times"
+                    severity="secondary"
+                    text
+                    rounded
+                    aria-label="Close menu"
+                    @click="closeMobileMenu"
+                />
+            </div>
+
+            <AppMenu />
+
+        </aside>
+    </div>
+
     <!-- Change password dialog -->
      <ChangePasswordDialog
         v-model:visible="passwordDialogVisible"
@@ -304,5 +372,76 @@ watch(
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+/*CSS mobile menu drawer and navigator*/
+.mobile-menu-button {
+    display: none;
+}
+
+.mobile-menu-overlay {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .topbar {
+        height: 56px;
+        padding: 0 12px;
+    }
+
+    .mobile-menu-button {
+        display: inline-flex;
+    }
+
+    .mobile-menu-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+
+        display: flex;
+
+        background: rgba(0, 0, 0, 0.35);
+    }
+
+    .mobile-menu-drawer {
+        width: min(280px, 85vw);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+
+        background: #ffffff;
+
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .mobile-menu-header {
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 16px;
+
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .mobile-app-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .mobile-tenant-name {
+        margin-top: 3px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .mobile-menu-drawer :deep(.app-menu) {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
 }
 </style>

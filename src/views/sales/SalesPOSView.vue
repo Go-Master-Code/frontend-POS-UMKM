@@ -386,6 +386,10 @@
         if (cartItems.value.length === 0) {
             return;
         }
+        
+        // Tutup mobile cart terlebih dahulu
+        cartVisible.value = false;
+
         console.log("NOTES BEFORE PAYMENT:", notes.value);
         paymentDialogVisible.value=true;
     }

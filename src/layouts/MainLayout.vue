@@ -47,4 +47,15 @@ import AppFooter from "@/components/layout/AppFooter.vue";
     overflow:auto;
     padding:24px;
 }
+
+/* Mobile */
+@media (max-width: 900px) {
+    :deep(.sidebar) {
+        display: none;
+    }
+
+    .layout-content {
+        padding: 16px;
+    }
+}
 </style>
